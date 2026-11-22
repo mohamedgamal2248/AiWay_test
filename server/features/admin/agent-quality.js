@@ -84,7 +84,7 @@ export function aggregateAgentQuality(
   for (const r of reservations) {
     if (r.status !== "released") continue;
     failures++;
-    const code = String(r.response_meta?.code || "RELEASED");
+    const code = String(r.metadata?.code || "RELEASED");
     errorCodes[code] = (errorCodes[code] || 0) + 1;
     const d = daily.get(day(r.created_at));
     if (d) d.failures++;
@@ -164,9 +164,9 @@ export async function agentQuality(req, res) {
       .order("created_at", { ascending: false })
       .limit(MAX_ROWS),
     supabase
-      .from("ai_usage_reservations")
-      .select("status,created_at,response_meta")
-      .eq("kind", "agent")
+      .from("ai_token_reservations")
+      .select("status,created_at,metadata")
+      .eq("kind", "other")
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(MAX_ROWS),

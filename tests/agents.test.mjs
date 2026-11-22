@@ -671,7 +671,7 @@ test("Pi App Builder run: tools, ZIP artifact, capped reservation and one finali
   );
 
   const reserve = calls.find(([n]) => n === "reserve_ai_tokens");
-  assert.equal(reserve[1].p_kind, "agent");
+  assert.equal(reserve[1].p_kind, "other");
   assert.equal(reserve[1].p_amount, 6000);
   const finalize = calls.filter(([n]) => n === "finalize_ai_tokens");
   assert.equal(finalize.length, 1);

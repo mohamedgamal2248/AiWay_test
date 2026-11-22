@@ -653,12 +653,12 @@ test("agent quality aggregates runs, stop reasons, trial cost and failures per a
       {
         status: "released",
         created_at: "2026-11-22T09:00:00Z",
-        response_meta: { code: "RATE_LIMITED" },
+        metadata: { code: "RATE_LIMITED" },
       },
       {
         status: "released",
         created_at: "2026-11-22T09:30:00Z",
-        response_meta: { code: "RATE_LIMITED" },
+        metadata: { code: "RATE_LIMITED" },
       },
       { status: "completed", created_at: "2026-11-22T09:40:00Z" },
     ],
@@ -714,7 +714,7 @@ test("the quality endpoint is admin-only", async () => {
     fakeClient({
       users: { data: admin, error: null },
       messages: { data: [], error: null },
-      ai_usage_reservations: { data: [], error: null },
+      ai_token_reservations: { data: [], error: null },
     }),
   );
   const out2 = res();

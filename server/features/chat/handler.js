@@ -535,11 +535,13 @@ ${JSON.stringify(toolInstructionPayload)}`
       throw appError("MISSING_CONFIGURATION", { missing: ["META_API_KEY"] });
 
     if (purchased) {
+      // ai_token_reservations only accepts chat/image/audio/video/embedding/other;
+      // an "agent" kind violates its CHECK constraint and rejected every paid run.
       await reserveAiTokens(
         supabase,
         user.id,
         requestId,
-        isAgent ? "agent" : "chat",
+        isAgent ? "other" : "chat",
         reservedTokenAmount,
       );
       reservationActive = true;
