@@ -138,6 +138,13 @@ export async function getGlobalAnnouncement() {
 }
 
 export const PACKAGES = {
+  mini: {
+    name_ar: "ميني",
+    name_en: "Mini",
+    usd: 0.5,
+    tokens: tokensForUsd(0.5),
+    recommendedFor: "trial",
+  },
   lite: {
     name_ar: "لايت",
     name_en: "Lite",

@@ -4,6 +4,10 @@
 
 > ملاحظة: مفاتيح البيئة المطلوبة في `.env.example`. المزوّد الوحيد لنماذج الذكاء الاصطناعي هو Meta Model API (`META_API_KEY`).
 
+## الواجهة والتصميم
+
+ثيم Forest Lime في `theme.css` (يتحمّل بعد `app.css`) وهو المسؤول عن الألوان والتخطيط المتجاوب: شريط جانبي ثابت من 1024px، ودرج على الموبايل، ودعم RTL/LTR بخصائص منطقية. الخطوط ذاتية الاستضافة في `fonts/` (Inter وSpace Grotesk وIBM Plex Sans Arabic، SIL OFL) لأن الـCSP لا يسمح بخطوط خارجية. لوحة الإدارة (`admin.html`) لم تتغير. الأسعار والربح في [`docs/PRICING.md`](docs/PRICING.md).
+
 ## الوكلاء (Agents)
 
 النماذج مخفية عن المستخدم: كل الطلبات النصية على `muse-ember-1.0` وكل الصور على `muse-image-1.0`. التفاصيل في [`docs/AGENTS.md`](docs/AGENTS.md):

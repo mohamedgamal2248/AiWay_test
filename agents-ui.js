@@ -15,7 +15,7 @@
  TASK_ICONS['pi-app-builder']=ICON.builder;
  TASK_ICONS['general-agent']=ICON.general;
  TASK_ICONS['image-agent']=TASK_ICONS.image;
- window.AIWAY_CORE_TASKS=['pi-app-builder','general-agent','image-agent','writing'];
+ window.AIWAY_CORE_TASKS=['pi-app-builder','general-agent','image-agent'];
 
  const COPY={
   'all-models':{ar:['شات AiWay','اسأل أي سؤال، ابحث في الويب وأرفق ملفات.','شات ذكي عام'],en:['AiWay Chat','Ask anything, search the web and attach files.','General smart chat']},
@@ -34,6 +34,15 @@
  updateTaskContext=function(){const r=_ctx.apply(this,arguments);const h=HINT[activeTask];if(h&&$('prompt'))$('prompt').placeholder=t(h[0],h[1]);return r};
  const _loadModels=loadModels;
  loadModels=async function(){const r=await _loadModels.apply(this,arguments);applyCopy();if($('taskScreen')?.classList.contains('open'))renderTaskScreen();updateTaskContext();return r};
+
+ // Agent-specific starter prompts (the legacy defaults were generic business prompts).
+ const STARTERS={
+  'pi-app-builder':{ar:[['متجر ملصقات بدفع Pi','اعمل لي متجر ملصقات بسيط بدفع Pi، مناسب للموبايل.'],['صفحة لنشاطي التجاري','اعمل صفحة هبوط لنشاطي مع تسجيل دخول Pi ونموذج تواصل.'],['أضف دفع Pi لموقعي','اكتب لي كود الدفع بـ Pi للعميل والخادم (approve و complete).']],en:[['Sticker shop with Pi checkout','Build a simple sticker shop with Pi checkout, mobile first.'],['Landing page for my business','Build a landing page for my business with Pi sign-in and a contact form.'],['Add Pi payments to my site','Write the Pi payment code for client and server (approve and complete).']]},
+  'general-agent':{ar:[['لخّص ملف PDF','لخّص الملف المرفق في صفحة واحدة بصيغة PDF.'],['حوّل الجداول إلى Excel','استخرج الجداول من الملف المرفق في ملف Excel.'],['اعمل عرضًا تقديميًا','اعمل عرض PowerPoint من 8 شرائح عن الموضوع التالي: ']],en:[['Summarize a PDF','Summarize the attached file on one page as a PDF.'],['Tables to Excel','Extract the tables from the attached file into an Excel workbook.'],['Make a presentation','Create an 8-slide PowerPoint about: ']]},
+  'image-agent':{ar:[['شعار بسيط','اعمل شعارًا بسيطًا ومسطحًا لمتجر قهوة باللون الأخضر.'],['صورة غلاف 16:9','اعمل صورة غلاف 16:9 لمنصة ذكاء اصطناعي، ألوان داكنة مع لمسات ليمونية.'],['عدّل صورتي','أرفق صورة ثم اكتب التعديل المطلوب، مثل: غيّر الخلفية إلى غابة.']],en:[['Simple logo','Create a simple flat logo for a coffee shop in green.'],['16:9 cover image','Create a 16:9 cover image for an AI platform, dark tones with lime accents.'],['Edit my image','Attach an image and describe the change, e.g. change the background to a forest.']]}
+ };
+ const _suggestions=taskSuggestions;
+ taskSuggestions=function(){const s=STARTERS[activeTask];return s?(AR()?s.ar:s.en):_suggestions.apply(this,arguments)};
 
  // ---- live status while an agent works --------------------------------------
  const STEP={

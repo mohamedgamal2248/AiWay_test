@@ -9,7 +9,7 @@ export let piPriceCache = {
 
 export function validPiPrice(value) {
   const price = Number(value);
-  return Number.isFinite(price) && price > 0.01 && price < 100 ? price : 0;
+  return Number.isFinite(price) && price > 0.001 && price < 100 ? price : 0;
 }
 
 export async function fetchPiPriceSource(source) {
@@ -60,29 +60,39 @@ export async function fetchPiPriceSource(source) {
   return { price, source: "MEXC PIUSDT spot ticker" };
 }
 
+// OKX is the reference market. Gate.io and MEXC are only consulted, in that order, when
+// OKX itself fails, so a quote never silently comes from a different venue while OKX is up.
+const FALLBACK_SOURCES = ["OKX", "Gate.io", "MEXC"];
+// A quote older than this is never reused when every market is down.
+const MAX_STALE_MS = 10 * 60_000;
+
 export async function getPiUsd() {
   if (piPriceCache.price > 0 && Date.now() < piPriceCache.expires)
     return piPriceCache.price;
-  const attempts = ["OKX", "Gate.io", "MEXC"].map((source) =>
-    fetchPiPriceSource(source),
-  );
-  let quote;
-  try {
-    quote = await Promise.any(attempts);
-  } catch (error) {
-    console.warn(
-      "All Pi price providers failed",
-      error?.errors?.map?.((e) => e?.message) || error?.message || error,
-    );
-    throw appError("OKX_PRICE_UNAVAILABLE", {
-      internalMessage: "All configured Pi price providers are unavailable",
-    });
+  const failures = [];
+  for (const source of FALLBACK_SOURCES) {
+    try {
+      const quote = await fetchPiPriceSource(source);
+      piPriceCache = {
+        price: quote.price,
+        source: quote.source,
+        expires: Date.now() + 60_000,
+        quotedAt: new Date().toISOString(),
+      };
+      return quote.price;
+    } catch (error) {
+      failures.push(`${source}: ${error?.message || error}`);
+    }
   }
-  piPriceCache = {
-    price: quote.price,
-    source: quote.source,
-    expires: Date.now() + 60_000,
-    quotedAt: new Date().toISOString(),
-  };
-  return quote.price;
+  console.warn("All Pi price providers failed", failures);
+  // Brief outage: the 5% price buffer covers a few minutes of drift.
+  if (
+    piPriceCache.price > 0 &&
+    piPriceCache.quotedAt &&
+    Date.now() - Date.parse(piPriceCache.quotedAt) < MAX_STALE_MS
+  )
+    return piPriceCache.price;
+  throw appError("OKX_PRICE_UNAVAILABLE", {
+    internalMessage: "All configured Pi price providers are unavailable",
+  });
 }

@@ -52,8 +52,7 @@ export default async function handler(req, res) {
     const admin = await requireUser(req);
     await requireAdmin(admin);
     const s = db();
-    const expirySweep = await s.rpc("expire_all_paid_tokens");
-    if (expirySweep.error) throw expirySweep.error;
+    // Purchased balances never expire: the legacy expire_all_paid_tokens sweep is no longer called.
     return json(
       res,
       200,

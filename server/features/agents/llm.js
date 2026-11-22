@@ -97,18 +97,28 @@ export async function runCompletion({
     }
     if (chunk?.error) throw metaError(Number(chunk.error?.code) || 500, chunk);
     id = chunk.id || id;
-    if (chunk.usage)
+    if (chunk.usage) {
+      const prompt = Number(chunk.usage.prompt_tokens || 0);
+      const reasoning = Number(
+        chunk.usage.completion_tokens_details?.reasoning_tokens || 0,
+      );
+      let completion = Number(chunk.usage.completion_tokens || 0);
+      const total = Number(chunk.usage.total_tokens || 0);
+      // Reasoning tokens are billed as output. Providers differ on whether
+      // completion_tokens already includes them, so never bill less than the
+      // total implies or than the visible + reasoning parts add up to.
+      if (total > prompt + completion) completion = total - prompt;
+      else if (reasoning > completion) completion += reasoning;
       usage = {
-        prompt_tokens: Number(chunk.usage.prompt_tokens || 0),
-        completion_tokens: Number(chunk.usage.completion_tokens || 0),
-        total_tokens: Number(chunk.usage.total_tokens || 0),
-        reasoning_tokens: Number(
-          chunk.usage.completion_tokens_details?.reasoning_tokens || 0,
-        ),
+        prompt_tokens: prompt,
+        completion_tokens: completion,
+        total_tokens: total || prompt + completion,
+        reasoning_tokens: reasoning,
         cached_tokens: Number(
           chunk.usage.prompt_tokens_details?.cached_tokens || 0,
         ),
       };
+    }
     const choice = chunk?.choices?.[0];
     if (!choice) return;
     if (choice.finish_reason) finishReason = String(choice.finish_reason);
