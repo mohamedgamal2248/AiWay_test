@@ -5,7 +5,12 @@ import fs from "node:fs/promises";
 
 test("the theme, its fonts and the agent UI are wired into the page", async () => {
   const html = await fs.readFile("index.html", "utf8");
-  for (const asset of ["/theme.css", "/agents.css", "/agents-ui.js"])
+  for (const asset of [
+    "/theme.css",
+    "/agents.css",
+    "/agents-ui.js",
+    "/agent-features.js",
+  ])
     assert.ok(html.includes(asset), `${asset} is linked`);
   // theme.css must load after the legacy sheets it overrides.
   assert.ok(html.indexOf("/theme.css") > html.indexOf("/app.css"));
@@ -102,4 +107,20 @@ test("the general chat card is gone and Back navigation is wired in", async () =
   assert.match(nav, /popstate/);
   // Chrome ignores history entries pushed without a user gesture.
   assert.match(nav, /pointerdown/);
+});
+
+test("agent features UI: library, preview, templates, cap and continue are wired", async () => {
+  const js = await fs.readFile("agent-features.js", "utf8");
+  for (const needle of [
+    "prepare-preview",
+    "action:'library'",
+    "aiwayRunCap",
+    "data-agent-continue",
+    "aiwayTemplate",
+  ])
+    assert.ok(js.includes(needle), needle);
+  const html = await fs.readFile("index.html", "utf8");
+  assert.ok(html.includes("/agent-features.js"));
+  const nav = await fs.readFile("nav-history.js", "utf8");
+  assert.match(nav, /libraryModal:'closeLibrary'/);
 });

@@ -77,6 +77,8 @@ export function emptyUsage() {
     webSearches: 0,
     images: 0,
     extraUsd: 0,
+    searchUsd: 0,
+    imageUsd: 0,
     modelUsd: 0,
   };
 }
@@ -219,7 +221,12 @@ export async function runAgent({
             remainingUsd: Math.max(0, maxUsd - spentUsd()),
           });
           content = truncateForModel(out?.content ?? "ok");
-          if (Number(out?.usd) > 0) usage.extraUsd += Number(out.usd);
+          if (Number(out?.usd) > 0) {
+            usage.extraUsd += Number(out.usd);
+            // Breakdown (subsets of extraUsd) used by the cost receipt.
+            if (out.webSearches) usage.searchUsd += Number(out.usd);
+            else if (out.images) usage.imageUsd += Number(out.usd);
+          }
           if (out?.webSearches) usage.webSearches += out.webSearches;
           if (out?.images) usage.images += out.images;
           for (const artifact of out?.artifacts || []) {

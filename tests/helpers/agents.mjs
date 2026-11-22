@@ -21,6 +21,9 @@ export function fakeClient(
           return q;
         },
         gt: () => q,
+        gte: () => q,
+        not: () => q,
+        in: () => q,
         order: () => q,
         limit: () => q,
         maybeSingle: () => q,

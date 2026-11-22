@@ -19,12 +19,17 @@
           "value": "camera=(), microphone=(self), geolocation=()"
         },
         {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://sdk.minepi.com https://cdn.jsdelivr.net; script-src-attr 'none'; style-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https:; font-src 'self' data: https:; frame-src 'self' https://minepi.com https://*.minepi.com https://sdk.minepi.com; worker-src 'self' blob:; object-src 'none'; frame-ancestors 'self' https://minepi.com https://*.minepi.com; base-uri 'self'; form-action 'self' https://minepi.com https://*.minepi.com; upgrade-insecure-requests;"
-        },
-        {
           "key": "Strict-Transport-Security",
           "value": "max-age=31536000; includeSubDomains"
+        }
+      ]
+    },
+    {
+      "source": "/((?!preview/).*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://sdk.minepi.com https://cdn.jsdelivr.net; script-src-attr 'none'; style-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https:; font-src 'self' data: https:; frame-src 'self' https://minepi.com https://*.minepi.com https://sdk.minepi.com; worker-src 'self' blob:; object-src 'none'; frame-ancestors 'self' https://minepi.com https://*.minepi.com; base-uri 'self'; form-action 'self' https://minepi.com https://*.minepi.com; upgrade-insecure-requests;"
         }
       ]
     },
@@ -128,6 +133,14 @@
     {
       "source": "/api/app-interactions",
       "destination": "/api/apps?route=interactions"
+    },
+    {
+      "source": "/preview/:ticket/:path*",
+      "destination": "/api/chat?action=preview&ticket=:ticket&path=:path*"
+    },
+    {
+      "source": "/preview/:ticket",
+      "destination": "/api/chat?action=preview&ticket=:ticket&path=index.html"
     }
   ],
   "buildCommand": "npm run build",

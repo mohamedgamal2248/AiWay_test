@@ -65,6 +65,15 @@ DOCX/PPTX/XLSX set RTL flags so Word/PowerPoint/Excel lay out Arabic natively. K
 extracted back from an Arabic PDF created by the agent is in visual order (copy/paste from the PDF is
 affected); the DOCX is the editable/searchable format.
 
+## Agent extras
+
+- **Cost receipt and per-run cap.** Every agent message stores a `receipt` (AI / search / images lines that always add up to the tokens charged). Paid users can pick a max cost per request (`runCapTokens`: 500 to 5,000); it only lowers the reservation, never raises it, and trial runs ignore it.
+- **Live preview.** `POST /api/chat {action:"prepare-preview"}` returns a 30-minute ticket URL `/preview/<ticket>/index.html` (a rewrite to `/api/chat?action=preview`, so no extra serverless function). Files are read from the project's own ZIP and served with a `sandbox` CSP without `allow-same-origin`.
+- **Templates.** `templateId` (shop, donations, loyalty, quiz, booking, paywall) appends a server-side blueprint to the Pi App Builder prompt; the browser only sees names and examples.
+- **Continue.** When a run stops on time, steps or cost the UI offers "Continue"; the prompt tells the agent to `list_files` first and only finish what is missing.
+- **Library.** `POST /api/chat {action:"library"}` lists the user's agent files (no storage paths).
+- **Admin quality dashboard.** `GET /api/admin-stats?mode=agents-quality&days=30` (admin only) aggregates runs, success and completion rates, stop reasons, time, cost and trial spend from existing tables.
+
 ## Verification status
 
 Covered by tests (`npm test`): stream/tool-call parsing, loop budgets, billing, reservation release,

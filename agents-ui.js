@@ -83,13 +83,24 @@
  const _files=generatedFilesMarkup;
  generatedFilesMarkup=function(m,i){return _files(m,i)+artifactCardsMarkup(m,i)};
 
+ // Cost receipt: an expandable breakdown whose lines add up to the charged amount.
+ const LINE_LABEL={ai:['عمل الذكاء الاصطناعي','AI work'],search:['بحث الويب','Web search'],images:['الصور','Images']};
+ function receiptMarkup(r){
+  const num=v=>Number(v||0).toLocaleString('en-US');
+  const lines=r.lines.map(l=>{const [ar,en]=LINE_LABEL[l.key]||[l.key,l.key];const extra=l.key==='ai'&&l.steps?` · ${l.steps} ${t('خطوات','steps')}`:l.count?` × ${l.count}`:'';return `<li><span>${esc2(t(ar,en))}${extra}</span><b>${num(l.tokens)}</b></li>`}).join('');
+  const secs=r.elapsedMs?` · ${Math.max(1,Math.round(r.elapsedMs/1000))}${t('ث','s')}`:'';
+  return `<details class="receipt"><summary><b>${num(r.total)}</b> ${t('توكن خُصمت','tokens charged')} <i aria-hidden="true">▾</i></summary><ul>${lines}<li class="receipt-total"><span>${t('الإجمالي','Total')}</span><b>${num(r.total)}</b></li></ul><div class="receipt-foot">${t('مدخلات','Input')} ${num(r.inputTokens)} · ${t('مخرجات','Output')} ${num(r.outputTokens)}${secs}</div></details>`;
+ }
+
  // Hidden models: keep the token cost, drop the model name.
  modelExecutionMarkup=function(m){
   if(m.role!=='assistant')return '';
   const charged=Number(m.chargedTokens??m.token_usage?.chargedTokens);
   const web=Boolean(m.usedWebSearch??m.token_usage?.webSearch)||Number(m.token_usage?.webSearches)>0;
   const parts=[];
-  if(Number.isFinite(charged))parts.push(`<span><b>${charged.toLocaleString('en-US')}</b> ${I18N[lang].tokensUsed}</span>`);
+  const receipt=m.receipt||m.token_usage?.receipt;
+  if(receipt&&Array.isArray(receipt.lines)&&receipt.lines.length)parts.push(receiptMarkup(receipt));
+  else if(Number.isFinite(charged))parts.push(`<span><b>${charged.toLocaleString('en-US')}</b> ${I18N[lang].tokensUsed}</span>`);
   if(web)parts.push(`<span class="web-search-meta" role="img" aria-label="${t('تم استخدام بحث الويب','Web search was used')}">${ICONS.globe}</span>`);
   const stop=m.token_usage?.stopReason;
   if(stop&&stop!=='complete')parts.push(`<span class="agent-limit-note">${stop==='time'?t('توقف عند حد الوقت','Stopped at the time limit'):stop==='cost'?t('توقف عند حد الرصيد المحجوز','Stopped at the reserved balance'):t('توقف عند حد الخطوات','Stopped at the step limit')}</span>`);
