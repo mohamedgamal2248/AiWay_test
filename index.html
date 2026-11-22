@@ -8,11 +8,13 @@
 <meta content="light" name="color-scheme"/>
 <script src="/app-head.js"></script>
 <title>AiWay</title>
+<meta content="AiWay — AI agents on Pi Network: build Pi apps, generate images and create documents. Pay per use with Pi." name="description"/>
 <link href="/aiway-logo.png" rel="icon" type="image/png"/>
 <link href="/aiway-logo.png" rel="apple-touch-icon"/>
 <link as="image" fetchpriority="high" href="/aiway-logo.png" rel="preload"/>
 <link href="/app.css?v=20260819-11" rel="stylesheet"/>
 <link href="/motion.css" rel="stylesheet"/>
+<link href="/agents.css" rel="stylesheet"/>
 <script src="/analytics-init.js"></script>
 <script defer="" src="/_vercel/insights/script.js"></script>
 
@@ -47,10 +49,10 @@
 <div class="compact-tool-head"><b id="introToolHead">ابدأ بالمهمة التي تريدها</b><small id="introToolSub">الموقع يختار نموذجًا مناسبًا وموفرًا تلقائيًا</small></div>
 <div class="compact-tool-grid">
 <button data-landing-key="chat" data-landing-task="all-models" type="button"><span>✦</span><b>الشات الذكي</b><small>اسأل أي نموذج</small></button>
-<button data-landing-key="image" data-landing-task="image" type="button"><span>▧</span><b>إنشاء الصور</b><small>حوّل فكرتك لصورة</small></button>
+<button data-landing-key="image" data-landing-task="image-agent" type="button"><span>▧</span><b>إنشاء الصور</b><small>حوّل فكرتك لصورة</small></button>
 <button data-landing-key="summary" data-landing-task="summary" type="button"><span>≡</span><b>التلخيص</b><small>اختصر النصوص والملفات</small></button>
-<button data-landing-key="coding" data-landing-task="coding" type="button"><span>&lt;/&gt;</span><b>البرمجة</b><small>اكتب وراجع الكود</small></button>
-<button data-landing-key="files" data-landing-task="files" type="button"><span>▤</span><b>تحليل الملفات</b><small>اسأل عن مستنداتك</small></button>
+<button data-landing-key="coding" data-landing-task="pi-app-builder" type="button"><span>&lt;/&gt;</span><b>البرمجة</b><small>اكتب وراجع الكود</small></button>
+<button data-landing-key="files" data-landing-task="general-agent" type="button"><span>▤</span><b>تحليل الملفات</b><small>اسأل عن مستنداتك</small></button>
 <button data-landing-key="translate" data-landing-task="translation" type="button"><span>文</span><b>الترجمة</b><small>ترجمة طبيعية ودقيقة</small></button>
 </div>
 </div>
@@ -147,6 +149,7 @@
 </div>
 <div class="auth-progress" id="authProgress" aria-live="polite" aria-hidden="true"><span class="auth-progress-spinner"></span><div><b id="authProgressTitle">Signing in</b><small id="authProgressText">Connecting securely to Pi…</small></div></div><div class="toast" id="toast"></div>
 <script src="/app.js?v=20260819-11"></script>
+<script src="/agents-ui.js"></script>
 <script src="/desktop-ui.js"></script>
 <script src="/dropzone-ui.js"></script>
 <script src="/landing-ui.js"></script>
