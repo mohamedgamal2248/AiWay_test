@@ -11,20 +11,10 @@
  const authHeaders=()=>({'Content-Type':'application/json',Authorization:`Bearer ${auth.token}`,'X-UI-Language':lang});
  const post=async body=>{const r=await fetch('/api/chat',{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});if(!r.ok)throw friendlyClientError(await r.json().catch(()=>({})),t('تعذر إكمال الطلب','Could not complete the request'));return r.json()};
 
- // ---- per-run cost cap ---------------------------------------------------------
- const CAPS=[0,500,1000,2000,5000];
- window.aiwayRunCap=CAPS.includes(Number(store.get('aiway_run_cap')))?Number(store.get('aiway_run_cap')):0;
- function capLabel(v){return v===0?t('تلقائي','Auto'):v>=1000?`${v/1000}K`:String(v)}
- function renderCapRow(){
-  const zone=document.querySelector('.composer-zone');if(!zone)return;
-  let row=q('runCapRow');
-  if(!row){row=document.createElement('div');row.id='runCapRow';row.className='run-cap';zone.insertBefore(row,zone.firstChild)}
-  const paid=Boolean(userProfile?.has_purchased);
-  row.hidden=!(isAgent()&&paid);
-  if(row.hidden)return;
-  row.innerHTML=`<span class="run-cap-label">${t('أقصى تكلفة','Max cost')}</span><span class="run-cap-chips" role="group" aria-label="${t('أقصى تكلفة','Max cost')}">${CAPS.map(v=>`<button type="button" class="run-cap-chip${window.aiwayRunCap===v?' on':''}" data-cap="${v}" aria-pressed="${window.aiwayRunCap===v}">${capLabel(v)}</button>`).join('')}</span>`;
- }
- document.addEventListener('click',e=>{const b=e.target.closest('.run-cap-chip');if(!b)return;window.aiwayRunCap=Number(b.dataset.cap);store.set('aiway_run_cap',String(window.aiwayRunCap));renderCapRow()});
+ // ---- per-run cost cap: no longer shown in the composer (the server still honours runCapTokens). ----
+ window.aiwayRunCap=0;
+ function renderCapRow(){q('runCapRow')?.remove()}
+ try{localStorage.removeItem('aiway_run_cap')}catch{}
 
  // ---- Pi app templates -----------------------------------------------------------
  window.aiwayTemplate='';
