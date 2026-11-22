@@ -1186,11 +1186,12 @@ async function sendMessage(){
       if(!modelId)throw makeUiError(lang==='ar'?'لا يوجد نموذج ذكاء اصطناعي متاح حاليًا. حدّث الصفحة وحاول مرة أخرى.':'No AI model is currently available. Refresh the page and try again.','MODEL_UNAVAILABLE');
     }
     let effectiveWebSearch=webSearch;
-    if(isImageRequest(text)&&selectedModel()?.isAuto){
+    const agentRun=Boolean(window.aiwayIsAgentTask?.());
+    if(!agentRun&&isImageRequest(text)&&selectedModel()?.isAuto){
       const freeImage=(window.aiwayImageModels||[]).find(m=>m.isFree&&!m.locked)||(window.aiwayImageModels||[]).find(m=>!m.locked);
       if(freeImage){$('model').value=freeImage.id;updateModelTrigger();syncModelMode();}
     }
-    if(isImageRequest(text)&&selectedModel()?.type!=='image'){
+    if(!agentRun&&isImageRequest(text)&&selectedModel()?.type!=='image'){
       const guidance=imageModelGuidance(text);
       history.push({role:'user',content:text,attachments:pendingAttachments.map(({name,type,size,dataUrl,text})=>({name,type,size,dataUrl,text}))});
       history.push({role:'assistant',content:guidance});
