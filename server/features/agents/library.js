@@ -1,6 +1,6 @@
 import { db } from "../../core/runtime.js";
 import { requireUser } from "../auth/service.js";
-import { isPreviewable } from "./preview.js";
+import { previewKind } from "./file-preview.js";
 
 // "Library": every file the user's agents created, newest first, grouped by message.
 // Files are recorded in token_usage.artifacts of assistant messages (see artifacts.js).
@@ -36,7 +36,8 @@ export async function listLibrary(req, res) {
         mime: a.mime,
         size: a.size,
         kind: a.kind || "file",
-        previewable: isPreviewable(a),
+        previewKind: previewKind(a),
+        previewable: Boolean(previewKind(a)),
       });
       if (items.length >= MAX_ITEMS) break;
     }

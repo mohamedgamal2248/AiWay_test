@@ -45,28 +45,45 @@
  taskSuggestions=function(){const s=STARTERS[activeTask];return s?(AR()?s.ar:s.en):_suggestions.apply(this,arguments)};
 
  // ---- live status while an agent works --------------------------------------
- const STEP={
-  web_search:['🔎 يبحث في الويب','🔎 Searching the web'],
-  write_file:['✍️ يكتب الملفات','✍️ Writing files'],edit_file:['✍️ يعدّل الملفات','✍️ Editing files'],
-  validate_project:['✅ يفحص المشروع','✅ Validating the project'],package_project:['📦 يجهّز ملف ZIP','📦 Packaging the ZIP'],
-  read_file:['📖 يقرأ الملف','📖 Reading the file'],search_in_file:['🔍 يبحث داخل الملفات','🔍 Searching the files'],
-  create_pdf:['📄 ينشئ ملف PDF','📄 Creating the PDF'],create_docx:['📝 ينشئ مستند Word','📝 Creating the Word file'],
-  create_xlsx:['📊 ينشئ ملف Excel','📊 Creating the Excel file'],create_pptx:['📽️ ينشئ العرض التقديمي','📽️ Creating the presentation'],
-  create_text_file:['📄 ينشئ الملف','📄 Creating the file'],generate_image:['🎨 يولّد الصور','🎨 Generating images'],edit_image:['🎨 يعدّل الصورة','🎨 Editing the image']
+ const SV=d=>`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+ const STATUS_ICON={
+  search:SV('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>'),
+  write:SV('<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19z"/><path d="M14.5 6.5l3 3"/>'),
+  check:SV('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M8.5 12l2.5 2.5L15.5 10"/>'),
+  box:SV('<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5L12 12l8-4.5M12 12v9"/>'),
+  read:SV('<path d="M4 5.5C6.5 4 9.5 4 12 5.5 14.5 4 17.5 4 20 5.5V19c-2.5-1.5-5.5-1.5-8 0-2.5-1.5-5.5-1.5-8 0z"/><path d="M12 5.5V19"/>'),
+  scan:SV('<path d="M4 8V5.5A1.5 1.5 0 015.5 4H8M16 4h2.5A1.5 1.5 0 0120 5.5V8M20 16v2.5a1.5 1.5 0 01-1.5 1.5H16M8 20H5.5A1.5 1.5 0 014 18.5V16"/><circle cx="11.5" cy="11.5" r="3"/><path d="M14 14l2.5 2.5"/>'),
+  pdf:SV('<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M8.5 15.5h7M8.5 12.5h4"/>'),
+  doc:SV('<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M8.5 12h7M8.5 15h7M8.5 18h4"/>'),
+  table:SV('<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M4 14.5h16M10 5v14"/>'),
+  slides:SV('<rect x="3.5" y="4.5" width="17" height="11" rx="2"/><path d="M12 15.5V20M8 20h8M8 9.5l2.5 2 3-3.5 2 2"/>'),
+  image:SV('<rect x="4" y="4.5" width="16" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M5 17.5l4.5-4.5 3 3 2.5-2.5 4 4"/>'),
+  gear:SV('<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>'),
+  think:SV('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18.5 16.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" stroke-width="1.5"/>'),
+  done:SV('<circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.8 2.8L16.2 9.5"/>')
  };
- function setStatus(text){
+ const STEP={
+  web_search:['يبحث في الويب','Searching the web','search'],
+  write_file:['يكتب الملفات','Writing files','write'],edit_file:['يعدّل الملفات','Editing files','write'],
+  validate_project:['يفحص المشروع','Validating the project','check'],package_project:['يجهّز ملف ZIP','Packaging the ZIP','box'],
+  read_file:['يقرأ الملف','Reading the file','read'],search_in_file:['يبحث داخل الملفات','Searching the files','scan'],
+  create_pdf:['ينشئ ملف PDF','Creating the PDF','pdf'],create_docx:['ينشئ مستند Word','Creating the Word file','doc'],
+  create_xlsx:['ينشئ ملف Excel','Creating the Excel file','table'],create_pptx:['ينشئ العرض التقديمي','Creating the presentation','slides'],
+  create_text_file:['ينشئ الملف','Creating the file','doc'],generate_image:['يولّد الصور','Generating images','image'],edit_image:['يعدّل الصورة','Editing the image','image']
+ };
+ function setStatus(text,icon){
   const m=history.at(-1);if(!m||m.role!=='assistant')return;
   m.agentStatus=text;
   const bubble=document.querySelector('.streaming-msg .bubble');if(!bubble)return;
   let el=bubble.querySelector('.agent-status');
   if(!text){el?.remove();return}
   if(!el){el=document.createElement('div');el.className='agent-status';el.setAttribute('role','status');bubble.appendChild(el)}
-  el.innerHTML=`<span class="agent-status-dot"></span><span>${esc2(text)}</span>`;
+  el.innerHTML=`<span class="agent-status-ic">${STATUS_ICON[icon]||STATUS_ICON.gear}</span><span>${esc2(text)}</span>`;
  }
  window.aiwayAgentEvent=function(d){
-  if(d.type==='agent_tool'&&d.phase==='start'){const s=STEP[d.tool];setStatus(s?t(s[0],s[1]):t('⚙️ يعمل على طلبك','⚙️ Working on it'))}
-  else if(d.type==='agent_tool'&&d.phase==='end')setStatus(t('⏳ يفكّر في الخطوة التالية','⏳ Planning the next step'));
-  else if(d.type==='artifact'&&d.artifact)setStatus(t('✅ تم تجهيز: ','✅ Ready: ')+d.artifact.name);
+  if(d.type==='agent_tool'&&d.phase==='start'){const s=STEP[d.tool];s?setStatus(t(s[0],s[1]),s[2]):setStatus(t('يعمل على طلبك','Working on it'),'gear')}
+  else if(d.type==='agent_tool'&&d.phase==='end')setStatus(t('يفكّر في الخطوة التالية','Planning the next step'),'think');
+  else if(d.type==='artifact'&&d.artifact)setStatus(t('تم تجهيز: ','Ready: ')+d.artifact.name,'done');
  };
 
  // ---- artifact cards ----------------------------------------------------------

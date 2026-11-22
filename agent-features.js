@@ -84,12 +84,12 @@
   });
   q('closePreview')?.addEventListener('click',()=>{frame.src='about:blank';q('previewModal').classList.remove('preview-full')});
  }
- const previewable=a=>a&&(a.kind==='project'||/\.zip$/i.test(a.name||'')||/\.html?$/i.test(a.name||''));
+ const previewable=a=>a&&(a.kind==='project'||/\.(zip|html?|pdf|docx|xlsx|pptx|txt|md|csv|tsv|json|xml|css|js|py|sql|ya?ml)$/i.test(a.name||''));
  document.addEventListener('click',e=>{
   const b=e.target.closest('[data-artifact-preview]');if(!b)return;
   const [i,id]=b.dataset.artifactPreview.split(':');const m=history[Number(i)];
   const a=(m?.artifacts||m?.token_usage?.artifacts||[]).find(x=>x.id===id);
-  if(m?.id)openPreview(m.id,id,a?.name);else toast(t('احفظ المحادثة ثم حاول مرة أخرى','Save the conversation and try again'));
+  if(m?.id)window.aiwayFileViewer?window.aiwayFileViewer.open({messageId:m.id,artifactId:id,name:a?.name}):openPreview(m.id,id,a?.name);else toast(t('احفظ المحادثة ثم حاول مرة أخرى','Save the conversation and try again'));
  });
 
  // Add a Preview button to project cards by decorating the rendered cards after each render.
@@ -164,11 +164,11 @@
   const row=e.target.closest('.library-item');if(!row)return;
   const {msg,art,conv}=row.dataset;
   if(e.target.closest('[data-lib-download]'))return downloadById(msg,art);
-  if(e.target.closest('[data-lib-preview]')){q('libraryModal').classList.remove('open');return openPreview(msg,art,row.querySelector('b')?.textContent)}
+  if(e.target.closest('[data-lib-preview]')){q('libraryModal').classList.remove('open');return window.aiwayFileViewer?window.aiwayFileViewer.open({messageId:msg,artifactId:art,name:row.querySelector('b')?.textContent}):openPreview(msg,art,row.querySelector('b')?.textContent)}
   if(e.target.closest('[data-lib-open]')){q('libraryModal').classList.remove('open');if(typeof closeTaskScreen==='function')closeTaskScreen();return openChat(conv)}
  }
  ensureLibraryUi();
  const _lang=typeof updateIntroLanguage==='function'?updateIntroLanguage:null;
  if(_lang)updateIntroLanguage=function(){const r=_lang.apply(this,arguments);try{ensureLibraryUi();renderCapRow();renderTemplateChip()}catch{}return r};
- window.aiwayFeatures={openLibrary,openPreview,renderCapRow};
+ window.aiwayFeatures={openLibrary,openPreview,renderCapRow,downloadById};
 })();

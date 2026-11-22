@@ -76,7 +76,11 @@ async function serve(req, res, expectedKind, disposition) {
     String(ticket.sub),
   );
   const artifact = findArtifact(message, ticket.artifactId);
-  if (disposition === "inline" && !isImageMime(artifact.mime))
+  if (
+    disposition === "inline" &&
+    !isImageMime(artifact.mime) &&
+    artifact.mime !== "application/pdf"
+  )
     throw appError("UNAUTHORIZED");
   const body = await readArtifactBytes(db(), artifact);
   const asciiName =

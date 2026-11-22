@@ -60,6 +60,7 @@ import { publicArtifact, removeArtifacts } from "../agents/artifacts.js";
 import { prepareAgentAttachments } from "../agents/attachments.js";
 import { buildReceipt } from "../agents/receipt.js";
 import { templateBlueprint } from "../agents/templates.js";
+import { prepareFilePreview } from "../agents/file-preview.js";
 import { preparePreview, servePreview } from "../agents/preview.js";
 import { listLibrary } from "../agents/library.js";
 
@@ -119,6 +120,8 @@ export default async function handler(req, res) {
       return await prepareArtifactDownload(req, res);
     if (req.method === "POST" && downloadAction === "prepare-artifact-views")
       return await prepareArtifactViews(req, res);
+    if (req.method === "POST" && downloadAction === "file-preview")
+      return await prepareFilePreview(req, res);
     if (req.method === "POST" && downloadAction === "prepare-preview")
       return await preparePreview(req, res);
     if (req.method === "GET" && downloadAction === "preview")

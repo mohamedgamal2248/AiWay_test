@@ -9,6 +9,16 @@ import {
   templateBlueprint,
   templateCatalog,
 } from "../server/features/agents/templates.js";
+import { renderPdf } from "../server/features/agents/documents/pdf.js";
+import { renderDocx } from "../server/features/agents/documents/docx.js";
+import { renderXlsx } from "../server/features/agents/documents/xlsx.js";
+import { renderPptx } from "../server/features/agents/documents/pptx.js";
+import {
+  normalizeDocument,
+  normalizeDeck,
+  normalizeWorkbook,
+} from "../server/features/agents/documents/spec.js";
+import { sanitizeHtml } from "../server/features/agents/file-preview.js";
 import { piAppBuilderPrompt } from "../server/features/agents/prompts.js";
 import {
   safeProjectPath,
@@ -587,7 +597,10 @@ test("library lists only agent artifacts with their conversation titles", async 
     ["shop.zip", "a.png"],
   );
   assert.equal(items[0].previewable, true);
-  assert.equal(items[1].previewable, false);
+  // Documents and images are previewable too (with their own preview kind).
+  assert.equal(items[0].previewKind, "project");
+  assert.equal(items[1].previewable, true);
+  assert.equal(items[1].previewKind, "image");
   assert.equal(items[0].conversationTitle, "Sticker shop");
   assert.ok(
     items.every((i) => !("path" in i)),
@@ -738,4 +751,126 @@ test("pptxgenjs is only loaded lazily through its CommonJS build (a static impor
   );
   assert.doesNotMatch(src, /^import .* from "pptxgenjs"/m);
   assert.match(src, /createRequire/);
+});
+
+test("file preview: PDF gets an inline ticket, Office files become sanitised HTML, text stays text", async () => {
+  const doc = normalizeDocument({
+    title: "Report",
+    sections: [
+      {
+        heading: "Overview",
+        paragraphs: ["Needle-alpha lives here."],
+        table: { headers: ["Item", "Value"], rows: [["Users", "1,200"]] },
+      },
+    ],
+  });
+  const files = {
+    "r.pdf": ["application/pdf", await renderPdf(doc)],
+    "r.docx": ["", await renderDocx(doc)],
+    "r.xlsx": [
+      "",
+      await renderXlsx(
+        normalizeWorkbook({
+          sheets: [
+            {
+              name: "S",
+              headers: ["a", "<b>"],
+              rows: [["x<script>", 1]],
+            },
+          ],
+        }),
+      ),
+    ],
+    "r.pptx": [
+      "",
+      await renderPptx(
+        normalizeDeck({
+          title: "Deck",
+          slides: [{ title: "One", bullets: ["slide-alpha"] }],
+        }),
+      ),
+    ],
+    "n.txt": ["text/plain", Buffer.from("hello text")],
+    "z.bin": ["application/octet-stream", Buffer.from("xx")],
+  };
+  const artifacts = Object.entries(files).map(([name, [mime, bytes]]) => ({
+    id: `id-${name}`,
+    name,
+    mime,
+    size: bytes.length,
+    path: `${OWNER}/c/id-${name}/${name}`,
+    kind: "file",
+  }));
+  const { user, storage } = setup(
+    { has_purchased: true, ai_tokens: 10 },
+    () => ({
+      data: { id: "m1", role: "assistant", token_usage: { artifacts } },
+      error: null,
+    }),
+  );
+  for (const a of artifacts)
+    storage.objects.set(`agent-files/${a.path}`, files[a.name][1]);
+  const token = await signAppToken(user);
+  const ask = async (name) => {
+    const out = res();
+    await chatHandler(
+      {
+        method: "POST",
+        query: {},
+        headers: { authorization: "Bearer " + token },
+        body: {
+          action: "file-preview",
+          messageId: "m1",
+          artifactId: `id-${name}`,
+        },
+      },
+      out,
+    );
+    return out.json;
+  };
+  const pdf = await ask("r.pdf");
+  assert.equal(pdf.kind, "pdf");
+  assert.match(pdf.url, /action=artifact-view&ticket=/);
+  // The inline ticket really serves the PDF.
+  const view = res();
+  await chatHandler(
+    {
+      method: "GET",
+      query: {
+        action: "artifact-view",
+        ticket: decodeURIComponent(pdf.url.split("ticket=")[1]),
+      },
+      headers: {},
+    },
+    view,
+  );
+  assert.equal(view.statusCode, 200);
+  assert.equal(view.headers["Content-Type"], "application/pdf");
+  assert.match(view.headers["Content-Disposition"], /^inline/);
+
+  const docx = await ask("r.docx");
+  assert.equal(docx.kind, "html");
+  assert.match(docx.html, /Needle-alpha/);
+  assert.doesNotMatch(docx.html, /<script|onerror|href=/i);
+  const xlsx = await ask("r.xlsx");
+  assert.equal(xlsx.kind, "html");
+  assert.match(xlsx.html, /<table>/);
+  assert.doesNotMatch(xlsx.html, /<script/);
+  assert.match(xlsx.html, /x&lt;script&gt;/);
+  const pptx = await ask("r.pptx");
+  assert.match(pptx.html, /slide-alpha/);
+  assert.deepEqual(await ask("n.txt"), {
+    name: "n.txt",
+    size: 10,
+    kind: "text",
+    text: "hello text",
+  });
+  assert.equal((await ask("z.bin")).kind, "unsupported");
+});
+
+test("sanitizeHtml keeps structure and drops scripts, links, images and attributes", () => {
+  const out = sanitizeHtml(
+    '<p onclick="x()">a <a href="javascript:1">l</a><img src=x onerror=1><script>alert(1)</script></p><table><tr><td colspan="2" style="x">c</td></tr></table>',
+  );
+  assert.equal(out, '<p>a l</p><table><tr><td colspan="2">c</td></tr></table>');
 });

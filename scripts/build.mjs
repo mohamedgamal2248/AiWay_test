@@ -65,6 +65,23 @@ try {
 } catch {
   // No fonts directory: the theme falls back to system fonts.
 }
+// Vendored browser libraries (pdf.js for the in-chat PDF preview), copied as an allowlist.
+const vendorOut = path.join(output, "vendor");
+await fs.rm(vendorOut, { recursive: true, force: true });
+try {
+  for (const dir of await fs.readdir(path.join(root, "vendor"))) {
+    await fs.mkdir(path.join(vendorOut, dir), { recursive: true });
+    for (const entry of await fs.readdir(path.join(root, "vendor", dir))) {
+      if (!/\.(js|txt|md)$|^LICENSE/.test(entry)) continue;
+      await fs.copyFile(
+        path.join(root, "vendor", dir, entry),
+        path.join(vendorOut, dir, entry),
+      );
+    }
+  }
+} catch {
+  // No vendor directory.
+}
 console.log(
   "Built " + assets.length + " public assets, " + fontCount + " fonts.",
 );
