@@ -22,7 +22,7 @@
   const paid=Boolean(userProfile?.has_purchased);
   row.hidden=!(isAgent()&&paid);
   if(row.hidden)return;
-  row.innerHTML=`<span class="run-cap-label">${t('أقصى تكلفة لهذا الطلب','Max cost for this request')}</span><span class="run-cap-chips" role="group" aria-label="${t('أقصى تكلفة','Max cost')}">${CAPS.map(v=>`<button type="button" class="run-cap-chip${window.aiwayRunCap===v?' on':''}" data-cap="${v}" aria-pressed="${window.aiwayRunCap===v}">${capLabel(v)}</button>`).join('')}</span>`;
+  row.innerHTML=`<span class="run-cap-label">${t('أقصى تكلفة','Max cost')}</span><span class="run-cap-chips" role="group" aria-label="${t('أقصى تكلفة','Max cost')}">${CAPS.map(v=>`<button type="button" class="run-cap-chip${window.aiwayRunCap===v?' on':''}" data-cap="${v}" aria-pressed="${window.aiwayRunCap===v}">${capLabel(v)}</button>`).join('')}</span>`;
  }
  document.addEventListener('click',e=>{const b=e.target.closest('.run-cap-chip');if(!b)return;window.aiwayRunCap=Number(b.dataset.cap);store.set('aiway_run_cap',String(window.aiwayRunCap));renderCapRow()});
 

@@ -29,7 +29,7 @@
   }
  }
  applyCopy();
- const HINT={'pi-app-builder':['صف تطبيق Pi الذي تريد بناءه...','Describe the Pi app you want to build...'],'general-agent':['اسأل، أرفق ملفات، أو اطلب PDF/Word/Excel/PowerPoint...','Ask, attach files, or request a PDF / Word / Excel / PowerPoint...'],'image-agent':['صف الصورة التي تريدها، أو أرفق صورة لتعديلها...','Describe the image you want, or attach one to edit...'],'all-models':['اسأل أي شيء...','Ask anything...']};
+ const HINT={'pi-app-builder':['صف تطبيقك…','Describe your app…'],'general-agent':['اسأل أو أرفق ملفًا…','Ask or attach a file…'],'image-agent':['صف الصورة…','Describe the image…'],'all-models':['اسأل أي شيء…','Ask anything…']};
  const _ctx=updateTaskContext;
  updateTaskContext=function(){const r=_ctx.apply(this,arguments);const h=HINT[activeTask];if(h&&$('prompt'))$('prompt').placeholder=t(h[0],h[1]);return r};
  const _loadModels=loadModels;
@@ -142,3 +142,13 @@
  const _render=render;
  render=function(){const r=_render.apply(this,arguments);try{hydrateImages()}catch{}return r};
 })();
+
+
+/* Minimal "thinking" indicator: a pulsing orb, one shimmering line and step dots. */
+progressMarkup=function(m){
+  const l=progressLanguage(m),t=I18N[l],stage=m?.streamStage||'analyzing';
+  const stages=[['analyzing',t.analyzing],...(m?.usedWebSearch?[['searching',t.searching]]:[]),['writing',t.writing]];
+  const current=Math.max(0,stages.findIndex(x=>x[0]===stage));
+  const dots=stages.map((x,n)=>`<b class="${n<current?'done':n===current?'active':''}"></b>`).join('');
+  return `<div class="aw-think" role="status" aria-live="polite"><span class="aw-orb" aria-hidden="true"><i></i></span><span class="aw-think-text">${stages[current]?.[1]||t.thinking}</span><span class="aw-steps" aria-hidden="true">${dots}</span></div>`;
+};
