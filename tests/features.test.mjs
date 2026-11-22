@@ -426,7 +426,7 @@ test("preview: ticketed URL serves project files under a sandbox CSP and nothing
     prep,
   );
   const url = prep.json.url;
-  assert.match(url, /^\/preview\/[^/]+\/index\.html$/);
+  assert.match(url, /^\/preview\/[^/]+\/start$/);
   const ticket = decodeURIComponent(url.split("/")[2]);
   const get = async (path) => {
     const r = res();
@@ -440,6 +440,8 @@ test("preview: ticketed URL serves project files under a sandbox CSP and nothing
     );
     return r;
   };
+  const start = await get("start");
+  assert.equal(start.statusCode, 200);
   const index = await get("index.html");
   assert.equal(index.statusCode, 200);
   assert.match(index.headers["Content-Type"], /text\/html/);
@@ -726,4 +728,14 @@ test("the quality endpoint is admin-only", async () => {
   );
   assert.equal(out2.statusCode, 200);
   assert.equal(out2.json.days, 7);
+});
+
+test("pptxgenjs is only loaded lazily through its CommonJS build (a static import crashed /api/chat on Vercel)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const src = await readFile(
+    new URL("../server/features/agents/documents/pptx.js", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotMatch(src, /^import .* from "pptxgenjs"/m);
+  assert.match(src, /createRequire/);
 });

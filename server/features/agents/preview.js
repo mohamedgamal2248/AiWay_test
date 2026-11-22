@@ -122,7 +122,7 @@ export async function preparePreview(req, res) {
   return res.end(
     JSON.stringify({
       name: artifact.name,
-      url: `/preview/${encodeURIComponent(ticket)}/index.html`,
+      url: `/preview/${encodeURIComponent(ticket)}/start`,
     }),
   );
 }
@@ -139,10 +139,16 @@ export async function servePreview(req, res) {
   const raw = Array.isArray(req.query?.path)
     ? req.query.path.join("/")
     : req.query?.path;
-  const path = safeProjectPath(raw);
+  let path = safeProjectPath(raw);
+  // vercel.json uses cleanUrls, which redirects *.html to the extensionless URL and would
+  // break relative links. The entry point is therefore /start, and page.html is also
+  // reachable as /page.
+  if (path === "start") path = "index.html";
   const files = await loadProjectFiles(db(), artifact);
   let body =
-    files.get(path) || files.get(`${path.replace(/\/$/, "")}/index.html`);
+    files.get(path) ||
+    files.get(`${path.replace(/\/$/, "")}/index.html`) ||
+    files.get(`${path}.html`);
   let served = path;
   if (!body) {
     res.status(404);
@@ -150,7 +156,10 @@ export async function servePreview(req, res) {
     res.setHeader("Content-Security-Policy", PREVIEW_CSP);
     return res.end("Not found in this project");
   }
-  if (!files.get(path)) served = `${path.replace(/\/$/, "")}/index.html`;
+  if (!files.get(path))
+    served = files.get(`${path}.html`)
+      ? `${path}.html`
+      : `${path.replace(/\/$/, "")}/index.html`;
   res.status(200);
   res.setHeader("Content-Type", fileContentType(served));
   res.setHeader("Content-Length", String(body.length));

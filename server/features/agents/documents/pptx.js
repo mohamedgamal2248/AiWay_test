@@ -1,4 +1,13 @@
-import PptxGenJS from "pptxgenjs";
+import { createRequire } from "node:module";
+
+// pptxgenjs ships an ES build as plain .js without "type": "module". In the Vercel runtime
+// the ESM import condition resolves to it and the whole serverless function crashes at
+// load time (every /api/chat request returned 500). Load the CommonJS build lazily instead.
+const require = createRequire(import.meta.url);
+const loadPptxGenJS = () => {
+  const mod = require("pptxgenjs");
+  return mod.default || mod;
+};
 import { firstStrongRtl } from "./pdf.js";
 
 const BRAND = "6F2DBD";
@@ -7,6 +16,7 @@ const FONT = "Arial";
 const W = 13.333;
 
 export async function renderPptx(spec) {
+  const PptxGenJS = loadPptxGenJS();
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE";
   pptx.title = spec.title || "Presentation";
