@@ -13,8 +13,8 @@
   "dir": "auto",
   "icons": [
     {
-      "src": "/aiway-logo.png",
-      "sizes": "512x512",
+      "src": "/aiway-icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
@@ -22,7 +22,19 @@
       "src": "/aiway-logo.png",
       "sizes": "512x512",
       "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/aiway-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/aiway-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }

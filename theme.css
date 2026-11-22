@@ -240,3 +240,6 @@ html body .desktop-tabs:empty{display:none!important}
 html body .task-pro-badge{display:none!important}
 html body .packs{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important}
 html body .intro-packages-btn,html body .intro-start{font-size:15px}
+
+/* The general chat card was removed: agents are the entry points. */
+html body .task-pro-wrap{display:none!important}

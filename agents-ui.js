@@ -18,7 +18,7 @@
  window.AIWAY_CORE_TASKS=['pi-app-builder','general-agent','image-agent'];
 
  const COPY={
-  'all-models':{ar:['شات AiWay','اسأل أي سؤال، ابحث في الويب وأرفق ملفات.','شات ذكي عام'],en:['AiWay Chat','Ask anything, search the web and attach files.','General smart chat']},
+  'all-models':{ar:['AiWay','',''],en:['AiWay','','']},
   'pi-app-builder':{ar:['منشئ تطبيقات Pi','يبحث ويكتب ملفات المشروع كاملة ثم يسلّمك ZIP جاهزًا للتنزيل.','HTML وCSS وJS وPi SDK'],en:['Pi App Builder','Researches, writes the full project and hands you a ready ZIP.','HTML, CSS, JS and Pi SDK']},
   'general-agent':{ar:['الوكيل العام','ابحث واقرأ ملفاتك وأنشئ PDF وWord وExcel وPowerPoint.','بحث + ملفات + مستندات'],en:['General Agent','Research, read your files and create PDF, Word, Excel and PowerPoint.','Search + files + documents']},
   'image-agent':{ar:['وكيل الصور','يحسّن وصفك ويولّد صورًا أو يعدّل صورك.','توليد وتعديل الصور'],en:['Image Agent','Improves your prompt, generates images or edits yours.','Generate and edit images']}

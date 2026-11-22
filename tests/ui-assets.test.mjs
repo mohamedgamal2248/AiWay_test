@@ -68,3 +68,38 @@ test("the Mini package is in the default catalog and package cards use server na
   assert.match(js, /p\.name_en/);
   assert.match(js, /p\.popular/);
 });
+
+test("the new logo ships as SVG and valid PNGs, and the manifest points at files that exist", async () => {
+  const svg = await fs.readFile("aiway-logo.svg", "utf8");
+  assert.match(svg, /#B8F13B/i);
+  assert.doesNotMatch(svg, /6f2dbd/i, "no legacy purple in the logo");
+  for (const [file, size] of [
+    ["aiway-logo.png", 512],
+    ["brand/aiway-logo-1024.png", 1024],
+    ["aiway-icon-192.png", 192],
+    ["aiway-icon-maskable-512.png", 512],
+  ]) {
+    const bytes = await fs.readFile(file);
+    assert.equal(bytes.subarray(1, 4).toString(), "PNG", file);
+    assert.equal(bytes.readUInt32BE(16), size, `${file} width`);
+    assert.equal(bytes.readUInt32BE(20), size, `${file} height`);
+  }
+  const manifest = JSON.parse(await fs.readFile("manifest.json", "utf8"));
+  for (const icon of manifest.icons) await fs.access(icon.src.slice(1));
+  assert.ok(manifest.icons.some((i) => i.purpose === "maskable"));
+  const html = await fs.readFile("index.html", "utf8");
+  assert.match(html, /rel="icon" type="image\/svg\+xml"/);
+});
+
+test("the general chat card is gone and Back navigation is wired in", async () => {
+  const js = await fs.readFile("app.js", "utf8");
+  assert.match(js, /id!=='all-models'&&/);
+  const html = await fs.readFile("index.html", "utf8");
+  assert.doesNotMatch(html, /data-landing-task="all-models"/);
+  assert.ok(html.includes("/nav-history.js"));
+  const nav = await fs.readFile("nav-history.js", "utf8");
+  assert.match(nav, /pushState/);
+  assert.match(nav, /popstate/);
+  // Chrome ignores history entries pushed without a user gesture.
+  assert.match(nav, /pointerdown/);
+});

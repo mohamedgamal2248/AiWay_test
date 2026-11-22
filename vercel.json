@@ -47,7 +47,7 @@
       ]
     },
     {
-      "source": "/aiway-logo.png",
+      "source": "/(aiway-logo.png|aiway-logo.svg|aiway-icon-192.png|aiway-icon-maskable-512.png)",
       "headers": [
         {
           "key": "Cache-Control",

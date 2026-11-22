@@ -6,7 +6,7 @@
 
 ## الواجهة والتصميم
 
-ثيم Forest Lime في `theme.css` (يتحمّل بعد `app.css`) وهو المسؤول عن الألوان والتخطيط المتجاوب: شريط جانبي ثابت من 1024px، ودرج على الموبايل، ودعم RTL/LTR بخصائص منطقية. الخطوط ذاتية الاستضافة في `fonts/` (Inter وSpace Grotesk وIBM Plex Sans Arabic، SIL OFL) لأن الـCSP لا يسمح بخطوط خارجية. لوحة الإدارة (`admin.html`) لم تتغير. الأسعار والربح في [`docs/PRICING.md`](docs/PRICING.md).
+ثيم Forest Lime في `theme.css` (يتحمّل بعد `app.css`) وهو المسؤول عن الألوان والتخطيط المتجاوب: شريط جانبي ثابت من 1024px، ودرج على الموبايل، ودعم RTL/LTR بخصائص منطقية. الخطوط ذاتية الاستضافة في `fonts/` (Inter وSpace Grotesk وIBM Plex Sans Arabic، SIL OFL) لأن الـCSP لا يسمح بخطوط خارجية. لوحة الإدارة (`admin.html`) لم تتغير. زر الرجوع داخل متصفح Pi مُدار في `nav-history.js` (يغلق النافذة/الدرج أولًا، ثم يصعد من الشات إلى اختيار الأداة، وفي الجذر يطلب ضغطتين للخروج). الشعار: `aiway-logo.svg` وملفات PNG في `brand/` (1024px لقائمة التطبيق في Pi). الأسعار والربح في [`docs/PRICING.md`](docs/PRICING.md).
 
 ## الوكلاء (Agents)
 
