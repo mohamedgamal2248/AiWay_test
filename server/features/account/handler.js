@@ -16,10 +16,7 @@ export default async function handler(req, res) {
   try {
     const user = await requireUser(req);
     const supabase = db();
-    const expired = await supabase.rpc("expire_paid_tokens", {
-      p_user_id: user.id,
-    });
-    if (expired.error) throw appError("DATABASE_ERROR", {}, expired.error);
+    // Purchased balances never expire: the legacy expire_paid_tokens sweep is no longer called.
     const { data, error } = await supabase
       .from("users")
       .select(

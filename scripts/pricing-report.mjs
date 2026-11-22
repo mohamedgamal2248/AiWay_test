@@ -44,7 +44,7 @@ for (const p of Object.values(PACKAGES)) {
   );
 }
 console.log(
-  "* what you receive at quote time, if every token is used. Unused tokens are pure profit.\n",
+  "* what you receive at quote time, once every token is used (balances never expire).\n",
 );
 
 const row = (label, p, c, extra = 0) => {

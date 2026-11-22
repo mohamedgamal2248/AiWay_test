@@ -9,7 +9,7 @@ Run `node scripts/pricing-report.mjs` for the live numbers (it reads the Pi pric
   Ember: $0.10 / $0.50 per million input / output tokens (×3 input above 200K, which AiWay avoids),
   web search $2.50 per 1,000 queries, Muse Image $0.01 per image. Reasoning tokens are billed as output.
 - **Packages are sold at 2×** (`PROVIDER_BUDGET_SHARE = 0.5`): a $10 package gives 500,000 tokens, whose
-  Meta cost is $5. Defaults (code): Lite $2, Starter $5, Plus $10, Pro $20. The `payment_packages`
+  Meta cost is $5. Defaults (code, same as the production table): Mini $0.50, Lite $2, Starter $5, Plus $10, Pro $20. The `payment_packages`
   table in your database overrides them; edit packages in the admin panel.
 - **Pi amount** = `usd / PI_USD × 1.05`. `PI_USD` comes from **OKX PI-USDT** (Gate.io, then MEXC, only if OKX
   is down; a quote up to 10 minutes old survives a total outage). The signed quote is valid 5 minutes. The 5%
@@ -25,7 +25,7 @@ Run `node scripts/pricing-report.mjs` for the live numbers (it reads the Pi pric
 | Plus $10   | 500,000        | 191.71    | $5.00                   | $5.50        |
 | Pro $20    | 1,000,000      | 383.42    | $10.00                  | $11.00       |
 
-Gross profit ≈ 52% of the USD value received. Tokens that are never used are 100% profit.
+Gross profit ≈ 52% of the USD value received (realized as tokens are used).
 
 | Action                            | Meta cost | User pays |
 | --------------------------------- | --------- | --------- |
@@ -47,7 +47,5 @@ Gross profit ≈ 52% of the USD value received. Tokens that are never used are 1
 - **Failed runs:** if Meta answers but AiWay then fails (storage/database error) the user is not charged but you
   still pay Meta. A run can also never charge more than it reserved; any overrun is absorbed.
 - **Fixed costs:** Vercel, Supabase and (optionally) Telegram are not in these numbers.
-- **Expiry:** balances expire after 30 days (database policy); expired tokens are pure profit.
-- **Affordability:** Lite is 38 Pi (~$2.10). Many Pi users hold only a few Pi, so consider a ~$0.50 package
-  (~10 Pi, 25,000 tokens: about 35 chats or 12 small agent runs). Packages are a business decision, so the
-  catalog was not changed.
+- **No expiry:** purchased balances never expire and are charged only as they are used. Unused tokens are therefore a standing liability (they are served at Meta's price whenever used), not profit. The legacy expiry sweeps are no longer called; `docs/sql/balances-never-expire.sql` optionally makes the database enforce it too.
+- **Affordability:** the $0.50 Mini package (~9.6 Pi, 25,000 tokens: about 35 chats or 12 small agent runs) was added for users who hold only a few Pi.

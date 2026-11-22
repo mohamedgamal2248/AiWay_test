@@ -1,3 +1,4 @@
+import "./setup.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -39,4 +40,31 @@ test("the page and manifest are English-first with a dark theme colour", async (
   const manifest = JSON.parse(await fs.readFile("manifest.json", "utf8"));
   assert.equal(manifest.lang, "en");
   assert.equal(manifest.theme_color.toLowerCase(), "#0b1a12");
+});
+
+test("balances never expire: no code path calls the legacy expiry sweeps and the UI says so", async () => {
+  for (const file of [
+    "server/features/account/handler.js",
+    "server/features/admin/handler.js",
+  ]) {
+    const source = await fs.readFile(file, "utf8");
+    assert.doesNotMatch(
+      source,
+      /rpc\(\s*["']expire_/,
+      `${file} must not call expire_*`,
+    );
+  }
+  const js = await fs.readFile("app.js", "utf8");
+  assert.match(js, /Your balance never expires/);
+  assert.match(js, /الرصيد لا ينتهي/);
+  assert.doesNotMatch(js, /valid for 30 days|صالح لمدة 30 يومًا/);
+});
+
+test("the Mini package is in the default catalog and package cards use server names", async () => {
+  const { PACKAGES } = await import("../server/domain/settings.js");
+  assert.equal(PACKAGES.mini.usd, 0.5);
+  assert.equal(PACKAGES.mini.tokens, 25000);
+  const js = await fs.readFile("app.js", "utf8");
+  assert.match(js, /p\.name_en/);
+  assert.match(js, /p\.popular/);
 });
