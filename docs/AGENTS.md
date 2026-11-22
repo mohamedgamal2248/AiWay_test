@@ -71,6 +71,7 @@ affected); the DOCX is the editable/searchable format.
 - **Live preview.** `POST /api/chat {action:"prepare-preview"}` returns a 30-minute ticket URL `/preview/<ticket>/start` (not `index.html`, because `cleanUrls` would redirect it and break relative links) (a rewrite to `/api/chat?action=preview`, so no extra serverless function). Files are read from the project's own ZIP and served with a `sandbox` CSP without `allow-same-origin`.
 - **Templates.** `templateId` (shop, donations, loyalty, quiz, booking, paywall) appends a server-side blueprint to the Pi App Builder prompt; the browser only sees names and examples.
 - **Continue.** When a run stops on time, steps or cost the UI offers "Continue"; the prompt tells the agent to `list_files` first and only finish what is missing.
+- **File viewer.** `POST /api/chat {action:"file-preview"}` opens any agent file inside the app: PDFs render client-side with the vendored pdf.js (`vendor/pdfjs`, legacy 3.11 build, works in the Pi Browser WebView) from a 30-minute inline ticket; DOCX, XLSX and PPTX are converted on the server to a sanitised HTML subset (allow-listed tags, no attributes, links or images); text and code come back as text; projects use the live preview above.
 - **Library.** `POST /api/chat {action:"library"}` lists the user's agent files (no storage paths).
 - **Admin quality dashboard.** `GET /api/admin-stats?mode=agents-quality&days=30` (admin only) aggregates runs, success and completion rates, stop reasons, time, cost and trial spend from existing tables.
 

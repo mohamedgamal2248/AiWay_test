@@ -7,7 +7,7 @@ async function walk(directory) {
   for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
     if (
       entry.name.startsWith(".") ||
-      ["node_modules", "public"].includes(entry.name)
+      ["node_modules", "public", "vendor"].includes(entry.name)
     )
       continue;
     const target = path.join(directory, entry.name);

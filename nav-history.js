@@ -18,7 +18,7 @@
  function closeTopLayer(){
   if(isOpen($('aiwayDialogOverlay'))&&click('aiwayDialogCancel'))return true;
   if(isOpen($('imagePreviewModal'))){click('closeImagePreview');return true}
-  const closers={piSigninModal:'cancelPiSignin',previewModal:'closePreview',libraryModal:'closeLibrary',supportModal:'closeSupport',payModal:'closePay'};
+  const closers={piSigninModal:'cancelPiSignin',previewModal:'closePreview',libraryModal:'closeLibrary',filePreviewModal:'closeFilePreview',supportModal:'closeSupport',payModal:'closePay'};
   for(const [overlay,closer] of Object.entries(closers)){
    if(isOpen($(overlay))){
     // A payment in flight must not be dismissed by Back; the app itself keeps it open.
