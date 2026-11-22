@@ -9,7 +9,8 @@
 <script src="/app-head.js"></script>
 <title>AiWay</title>
 <meta content="AiWay — AI agents on Pi Network: build Pi apps, generate images and create documents. Pay per use with Pi." name="description"/>
-<link href="/aiway-logo.png" rel="icon" type="image/png"/>
+<link href="/aiway-logo.svg" rel="icon" type="image/svg+xml"/>
+<link href="/aiway-logo.png" rel="icon" sizes="512x512" type="image/png"/>
 <link href="/aiway-logo.png" rel="apple-touch-icon"/>
 <link as="image" fetchpriority="high" href="/aiway-logo.png" rel="preload"/>
 <link href="/app.css?v=20260819-11" rel="stylesheet"/>
@@ -49,7 +50,7 @@
 <div class="compact-tool-panel" id="introToolPanel">
 <div class="compact-tool-head"><b id="introToolHead">ابدأ بالمهمة التي تريدها</b><small id="introToolSub">الموقع يختار نموذجًا مناسبًا وموفرًا تلقائيًا</small></div>
 <div class="compact-tool-grid">
-<button data-landing-key="chat" data-landing-task="all-models" type="button"><span>✦</span><b>الشات الذكي</b><small>اسأل أي نموذج</small></button>
+<button data-landing-key="writing" data-landing-task="writing" type="button"><span>✎</span><b>الكتابة</b><small>اكتب وأعد الصياغة</small></button>
 <button data-landing-key="image" data-landing-task="image-agent" type="button"><span>▧</span><b>إنشاء الصور</b><small>حوّل فكرتك لصورة</small></button>
 <button data-landing-key="summary" data-landing-task="summary" type="button"><span>≡</span><b>التلخيص</b><small>اختصر النصوص والملفات</small></button>
 <button data-landing-key="coding" data-landing-task="pi-app-builder" type="button"><span>&lt;/&gt;</span><b>البرمجة</b><small>اكتب وراجع الكود</small></button>
@@ -152,6 +153,7 @@
 <script src="/app.js?v=20260819-11"></script>
 <script src="/agents-ui.js"></script>
 <script src="/desktop-ui.js"></script>
+<script src="/nav-history.js"></script>
 <script src="/dropzone-ui.js"></script>
 <script src="/landing-ui.js"></script>
 

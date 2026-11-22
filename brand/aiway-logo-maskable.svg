@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AiWay">
+  <rect width="512" height="512" fill="#0B1A12"/>
+  <g transform="translate(256 262) scale(.72) translate(-256 -252)">
+    <path d="M142 372 256 132l114 240" fill="none" stroke="#B8F13B" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M196 304h120" fill="none" stroke="#F3E3B8" stroke-width="34" stroke-linecap="round"/>
+  </g>
+</svg>

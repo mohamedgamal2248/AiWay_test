@@ -482,7 +482,7 @@ const TASKS={
  'all-models':{ar:['AiWay PRO','اختر من نماذج الذكاء الاصطناعي المختلفة، أو دع AiWay Auto تختار الأنسب لك.','اختيار النموذج أو التوجيه التلقائي'],en:['AiWay PRO','Choose from different AI models, or let AiWay Auto select the best fit for you.','Manual or automatic model selection']}
 };
 let visibleTaskIds=null;
-function isTaskVisible(id){return Boolean(TASKS[id])&&id!=='image'&&(!visibleTaskIds||visibleTaskIds.has(id))&&!(id==='image-agent'&&window.aiwayFeatureFlags?.images===false)}
+function isTaskVisible(id){return Boolean(TASKS[id])&&id!=='image'&&id!=='all-models'&&(!visibleTaskIds||visibleTaskIds.has(id))&&!(id==='image-agent'&&window.aiwayFeatureFlags?.images===false)}
 let activeTask=storageGet('aiway_active_task','');if(activeTask==='smart'){activeTask='';storageRemove('aiway_active_task');}storageRemove('aiway_smart_profile');function taskText(id){return TASKS[id]?.[lang]||TASKS[id]?.en||['AiWay','','']}
 function renderTaskScreen(){
   const grid=$('taskGrid');if(!grid)return;
