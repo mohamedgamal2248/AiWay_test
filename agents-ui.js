@@ -44,6 +44,8 @@
  const _suggestions=taskSuggestions;
  taskSuggestions=function(){const s=STARTERS[activeTask];return s?(AR()?s.ar:s.en):_suggestions.apply(this,arguments)};
 
+ window.aiwayIsAgentTask=()=>['pi-app-builder','general-agent','image-agent'].includes(activeTask);
+
  // ---- live status while an agent works --------------------------------------
  const SV=d=>`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
  const STATUS_ICON={
