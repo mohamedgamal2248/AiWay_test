@@ -1037,6 +1037,7 @@ async function compressImage(file){const url=await fileToDataUrl(file);return ne
 async function addFiles(files){
   for(const file of [...files]){
     if(pendingAttachments.length>=MAX_ATTACHMENTS){toast(lang==='ar'?`يمكن إرفاق حتى ${MAX_ATTACHMENTS} ملفًا في الرسالة الواحدة.`:`You can attach up to ${MAX_ATTACHMENTS} files per message.`);break}
+    if(String(file.type||'').startsWith('video/')||/\.(mp4|mov|avi|mkv|webm|3gp)$/i.test(file.name||'')){toast(lang==='ar'?'إرفاق الفيديو غير مدعوم. أرفق صورًا أو ملفات.':'Video attachments are not supported. Attach photos or files.');continue}
     const textLike=isTextLikeFile(file),perFileLimit=textLike?MAX_TEXT_FILE_BYTES:MAX_BINARY_FILE_BYTES;
     if(file.size>perFileLimit){toast(lang==='ar'?`الملف ${file.name} كبير جدًا لهذا الطلب. الملفات النصية/الكود حتى ${(MAX_TEXT_FILE_BYTES/1048576).toFixed(1)} MB والملفات الثنائية حتى ${(MAX_BINARY_FILE_BYTES/1048576).toFixed(1)} MB.`:`${file.name} is too large for one request. Text/code files support up to ${(MAX_TEXT_FILE_BYTES/1048576).toFixed(1)} MB and binary files up to ${(MAX_BINARY_FILE_BYTES/1048576).toFixed(1)} MB.`);continue}
     const current=pendingAttachments.reduce((n,a)=>n+(a.size||0),0);
