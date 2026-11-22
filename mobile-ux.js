@@ -6,18 +6,20 @@
  function copyOptions(src,dst){if(!src||!dst)return;const val=src.value;dst.innerHTML=[...src.options].map(o=>`<option value="${String(o.value).replace(/"/g,'&quot;')}">${o.textContent}</option>`).join('');dst.value=val}
  function syncSheet(){
    const ar=document.documentElement.dir==='rtl';
-   const web=$id('webPill'),estimate=$id('costEstimateQuickToggle');
-   $id('mobileToolsTitle').textContent=ar?'أدوات الرسالة':'Message tools';$id('mobileToolsSubtitle').textContent=ar?'أظهر فقط ما تحتاجه الآن':'Only show what you need now';$id('mobileAttachLabel').textContent=ar?'إرفاق ملف':'Attach file';$id('mobileWebLabel').textContent=ar?'بحث الويب':'Web search';$id('mobileEstimateLabel').textContent=ar?'تقدير التكلفة':'Cost estimate';$id('mobileTaskActionLabel').textContent=ar?'تغيير الأداة':'Change tool';if($id('mobileAllToolsLabel'))$id('mobileAllToolsLabel').textContent=ar?'كل الأدوات':'All tools';if($id('mobileAllToolsBtn')){$id('mobileAllToolsBtn').setAttribute('aria-label',ar?'عرض كل الأدوات':'Show all tools');$id('mobileAllToolsBtn').title=ar?'عرض كل الأدوات':'Show all tools';}
-   $id('mobileWebState')?.classList.toggle('on',Boolean(web?.classList.contains('on')||web?.classList.contains('active')||web?.getAttribute('aria-pressed')==='true'));$id('mobileEstimateState')?.classList.toggle('on',Boolean(estimate?.classList.contains('active')||estimate?.getAttribute('aria-pressed')==='true'));
+   $id('mobileToolsTitle').textContent=ar?'إرفاق':'Attach';$id('mobileToolsSubtitle').textContent=ar?'صور أو فيديو أو ملفات':'Photos, video or files';
+   $id('attachImageLabel').textContent=ar?'صور':'Photos';$id('attachVideoLabel').textContent=ar?'فيديو':'Video';$id('attachFileLabel').textContent=ar?'ملفات':'Files';
+   if($id('mobileAllToolsLabel'))$id('mobileAllToolsLabel').textContent=ar?'كل الأدوات':'All tools';$id('mobileAllToolsBtn')?.setAttribute('aria-label',ar?'عرض كل الأدوات':'Show all tools');if($id('mobileAllToolsBtn'))$id('mobileAllToolsBtn').title=ar?'عرض كل الأدوات':'Show all tools';
+   $id('mobileToolsClose')?.setAttribute('aria-label',ar?'إغلاق':'Close');more?.setAttribute('aria-label',ar?'إرفاق':'Attach');
  }
- more?.addEventListener('click',openSheet);$id('mobileToolsClose')?.addEventListener('click',closeSheet);$id('mobileToolsScrim')?.addEventListener('click',closeSheet);
- $id('mobileAttachAction')?.addEventListener('click',()=>{closeSheet();setTimeout(()=>$id('attachBtn')?.click(),20)});
- $id('mobileWebAction')?.addEventListener('click',()=>{$id('webPill')?.click();syncSheet()});
- $id('mobileEstimateAction')?.addEventListener('click',()=>{$id('costEstimateQuickToggle')?.click();syncSheet()});
- $id('mobileTaskAction')?.addEventListener('click',()=>{closeSheet();setTimeout(()=>typeof openTaskScreen==='function'&&openTaskScreen(),20)});
+ // Each option opens the system picker restricted to that kind; the app's own attachment
+ // pipeline (size limits, previews, storage) is unchanged.
+ function pick(accept){closeSheet();const input=$id('fileInput');if(!input)return;input.accept=accept;setTimeout(()=>{$id('attachBtn')?.click();setTimeout(()=>{input.accept='*/*'},60000)},20)}
  $id('mobileAllToolsBtn')?.addEventListener('click',()=>typeof openTaskScreen==='function'&&openTaskScreen());
+ more?.addEventListener('click',openSheet);$id('mobileToolsClose')?.addEventListener('click',closeSheet);$id('mobileToolsScrim')?.addEventListener('click',closeSheet);
+ $id('attachImageAction')?.addEventListener('click',()=>pick('image/*'));
+ $id('attachVideoAction')?.addEventListener('click',()=>pick('video/*'));
+ $id('attachFileAction')?.addEventListener('click',()=>pick('.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.csv,.json,.zip,application/*,text/*'));
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheet?.classList.contains('open'))closeSheet()});
- const obs=new MutationObserver(()=>syncSheet());['webPill','costEstimateQuickToggle'].forEach(id=>{const el=$id(id);if(el)obs.observe(el,{attributes:true,attributeFilter:['class','aria-pressed']})});
  window.addEventListener('resize',()=>{if(innerWidth>700&&sheet?.classList.contains('open'))closeSheet()});
  setTimeout(syncSheet,250);
 })();

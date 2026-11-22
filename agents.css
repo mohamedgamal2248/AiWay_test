@@ -103,3 +103,9 @@
 .file-doc th{background:rgba(184,241,59,.10);color:var(--lime)}
 .file-doc p{margin:.5em 0}
 .file-text{margin:0;padding:14px;border-radius:12px;background:var(--surface);color:var(--text);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* attach sheet: three options in one row */
+.mobile-tools-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.mobile-tools-grid>button{flex-direction:column!important;justify-content:center;gap:10px!important;min-height:104px;text-align:center}
+.attach-ic{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:rgba(184,241,59,.12);color:var(--lime)}
+.attach-ic svg{width:26px;height:26px}
