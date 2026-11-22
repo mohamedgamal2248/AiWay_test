@@ -48,4 +48,23 @@ for (const asset of assets.filter((asset) => asset.name.endsWith(".html"))) {
     ),
   );
 }
-console.log("Built " + assets.length + " public assets.");
+// Self-hosted fonts (CSP only allows same-origin styles): copied as an allowlist of woff2 files.
+const fontsOut = path.join(output, "fonts");
+await fs.rm(fontsOut, { recursive: true, force: true });
+let fontCount = 0;
+try {
+  await fs.mkdir(fontsOut, { recursive: true });
+  for (const entry of await fs.readdir(path.join(root, "fonts"))) {
+    if (!/\.woff2$/.test(entry)) continue;
+    await fs.copyFile(
+      path.join(root, "fonts", entry),
+      path.join(fontsOut, entry),
+    );
+    fontCount++;
+  }
+} catch {
+  // No fonts directory: the theme falls back to system fonts.
+}
+console.log(
+  "Built " + assets.length + " public assets, " + fontCount + " fonts.",
+);

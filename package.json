@@ -18,7 +18,10 @@
     "unpdf": "^1.9.1"
   },
   "devDependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource/ibm-plex-sans-arabic": "^5.3.0",
     "@fontsource/noto-naskh-arabic": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
     "embedded-postgres": "18.4.0-beta.17",
     "eslint": "9.39.5",
     "espree": "10.4.0",

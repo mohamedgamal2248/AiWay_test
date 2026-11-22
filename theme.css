@@ -1,0 +1,242 @@
+/* AiWay "Forest Lime" theme.
+   Loaded after app.css / motion.css / agents.css. It owns the colour system and the
+   responsive layout, so it deliberately uses `html body` specificity (the legacy sheet
+   has several stacked override layers). Logical properties are used throughout so the
+   same rules serve English (LTR) and Arabic (RTL). */
+
+@font-face{font-family:"AiWay Sans";src:url("/fonts/inter-latin-wght-normal.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"AiWay Display";src:url("/fonts/space-grotesk-latin-600-normal.woff2") format("woff2");font-weight:500 600;font-display:swap}
+@font-face{font-family:"AiWay Display";src:url("/fonts/space-grotesk-latin-700-normal.woff2") format("woff2");font-weight:700 800;font-display:swap}
+@font-face{font-family:"AiWay Arabic";src:url("/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"AiWay Arabic";src:url("/fonts/ibm-plex-sans-arabic-arabic-500-normal.woff2") format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"AiWay Arabic";src:url("/fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"AiWay Arabic";src:url("/fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2") format("woff2");font-weight:700 800;font-display:swap}
+
+:root{
+  --pi:#B8F13B!important;--pi2:#9ED82E!important;--pi3:#1A3526!important;--gold:#F3E3B8!important;
+  --bg:#0B1A12!important;--surface:#12261B!important;--surface2:#1A3526!important;--text:#EAF5EC!important;--muted:#94B5A0!important;--line:#2A4A37!important;
+  --danger:#FF8A7A!important;--ok:#B8F13B!important;--violet:#B8F13B!important;--violet-deep:#9ED82E!important;--cyan:#F3E3B8!important;--ink:#EAF5EC!important;
+  --shadow:0 14px 40px rgba(0,0,0,.38)!important;--shadow-soft:0 8px 24px rgba(0,0,0,.28)!important;--shadow-lift:0 18px 46px rgba(0,0,0,.45)!important;
+  --lime:#B8F13B!important;--lime-ink:#0B1A12!important;--sand:#F3E3B8!important;--coral:#FF8A7A!important;--line2:#1B3526!important;--deep:#0F2117!important;
+  --font-body:"AiWay Sans","AiWay Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif!important;
+  --font-display:"AiWay Display","AiWay Arabic","AiWay Sans",system-ui,sans-serif!important;
+  --shell-sidebar:288px!important;--content-w:860px!important;
+  color-scheme:dark;
+}
+html[lang="ar"],html[dir="rtl"]{--font-body:"AiWay Arabic","AiWay Sans",system-ui,Tahoma,sans-serif!important;--font-display:"AiWay Arabic","AiWay Display",system-ui,sans-serif!important}
+
+html body{background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased}
+html body *{scrollbar-color:#2A4A37 transparent}
+html body ::selection{background:var(--lime);color:var(--lime-ink)}
+html body a{color:var(--lime)}
+html body :focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+html body h1,html body h2,html body h3,html body .brand b,html body .intro-title,html body .task-card-copy b,html body .modal-head h2{font-family:var(--font-display)}
+html body input,html body textarea,html body select,html body button{font-family:inherit}
+
+/* ---------- primary actions: lime with dark ink ---------- */
+html body .btn.primary,html body .send,html body .intro-start,html body .intro-login-btn,html body .buy,html body .pack .btn.primary,
+html body .aiway-dialog-confirm,html body .support-send,html body .task-pro-badge,html body .file-download,html body .project-download{
+  background:var(--lime)!important;background-image:none!important;color:var(--lime-ink)!important;border:0!important;box-shadow:none!important;font-weight:700}
+html body .btn.primary:hover,html body .send:hover,html body .intro-start:hover,html body .buy:hover,html body .file-download:hover{background:#c8f75c!important;transform:none}
+html body .btn.soft,html body .icon-btn,html body .mini-btn,html body .intro-packages-btn,html body .top-tools-btn,html body .top-login-btn,html body .task-change{
+  background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--line)!important;box-shadow:none!important}
+html body .btn.soft:hover,html body .icon-btn:hover,html body .mini-btn:hover,html body .top-tools-btn:hover{background:var(--surface2)!important;border-color:#3A6048!important}
+html body .btn[disabled],html body button[disabled]{opacity:.5}
+html body .pill{background:var(--surface)!important;color:var(--muted)!important;border:1px solid var(--line)!important}
+html body .pill.active,html body .pill[aria-pressed="true"],html body .estimate-toggle.active{background:rgba(184,241,59,.12)!important;color:var(--lime)!important;border-color:var(--lime)!important}
+
+/* ---------- landing (intro) ---------- */
+html body .intro-screen{background:radial-gradient(900px 500px at 85% -10%,rgba(184,241,59,.10),transparent 60%),radial-gradient(700px 500px at -10% 110%,rgba(243,227,184,.07),transparent 60%),var(--bg)!important;color:var(--text)}
+html body .intro-nav,html body .compact-nav{background:rgba(18,38,27,.85)!important;border:1px solid var(--line)!important;box-shadow:none!important;backdrop-filter:blur(10px)}
+html body .intro-brand span,html body .intro-links button,html body .intro-lang{color:var(--text)!important}
+html body .intro-lang{background:var(--surface2)!important;border:1px solid var(--line)!important}
+html body .intro-title{color:var(--text)!important;letter-spacing:-.025em}
+html body .intro-title span{background:none!important;-webkit-text-fill-color:var(--lime)!important;color:var(--lime)!important}
+html body .intro-copy,html body .intro-note,html body .compact-free-note,html body .intro-footer{color:var(--muted)!important}
+html body .intro-eyebrow{background:rgba(184,241,59,.10)!important;color:var(--lime)!important;border:1px solid rgba(184,241,59,.3)!important}
+html body .compact-tool-panel{background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important}
+html body .compact-tool-head b{color:var(--text)}html body .compact-tool-head small{color:var(--muted)}
+html body .compact-tool-grid button{background:var(--deep)!important;border:1px solid var(--line2)!important;color:var(--text)!important;box-shadow:none!important}
+html body .compact-tool-grid button:hover{border-color:var(--lime)!important;transform:translateY(-2px)}
+html body .compact-tool-grid button span{background:rgba(184,241,59,.12)!important;color:var(--lime)!important}
+html body .compact-tool-grid button small{color:var(--muted)!important}
+html body .compact-how,html body .compact-bottom-cta{background:var(--surface)!important;border:1px solid var(--line)!important;color:var(--text)!important;box-shadow:none!important}
+html body .compact-steps span{background:var(--lime)!important;color:var(--lime-ink)!important}
+
+/* ---------- task picker ---------- */
+html body .task-screen{background:radial-gradient(800px 420px at 80% -10%,rgba(184,241,59,.09),transparent 60%),var(--bg)!important;color:var(--text)}
+html body .task-brand span,html body .task-head h1{color:var(--text)!important}
+html body .task-head h1 span{background:none!important;-webkit-text-fill-color:var(--lime)!important;color:var(--lime)!important}
+html body .task-head p,html body .task-footer,html body .task-section-label{color:var(--muted)!important}
+html body .task-kicker{background:rgba(184,241,59,.10)!important;color:var(--lime)!important;border:1px solid rgba(184,241,59,.3)!important}
+html body .task-lang-btn{background:var(--surface2)!important;color:var(--text)!important;border:1px solid var(--line)!important}
+html body .task-card{background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:none!important;color:var(--text)!important}
+html body .task-card:hover{border-color:var(--lime)!important;transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.35)!important}
+html body .task-card-icon{background:var(--lime)!important;color:var(--lime-ink)!important;box-shadow:none!important}
+html body .task-card:nth-child(2) .task-card-icon{background:var(--sand)!important;color:#2A2008!important}
+html body .task-card:nth-child(3) .task-card-icon{background:var(--coral)!important;color:#2A0C07!important}
+html body .task-card-copy small{color:var(--muted)!important}
+html body .task-more-toggle{background:var(--surface)!important;color:var(--lime)!important;border:1px solid var(--line)!important}
+html body .task-pro-card{background:var(--surface2)!important;border:1px solid var(--line)!important;color:var(--text)!important;box-shadow:none!important}
+html body .task-pro-card small{color:var(--muted)!important}
+html body .task-pro-badge{color:var(--lime-ink)!important}
+
+/* ---------- shell layout ---------- */
+html body .shell{background:var(--bg)!important;color:var(--text)}
+html body .sidebar{background:var(--surface)!important;background-image:none!important;border-color:var(--line2)!important;color:var(--text)}
+html body .brand b,html body .user-meta b{color:var(--text)}
+html body .brand small,html body .user-meta small,html body .history-title{color:var(--muted)}
+html body .brand-mark{background:transparent!important;box-shadow:none!important}
+html body .support-btn{background:var(--surface2)!important;color:var(--text)!important;border:1px solid var(--line)!important;box-shadow:none!important}
+html body .support-badge{background:var(--coral)!important;color:#2A0C07!important}
+html body .user-card{background:var(--surface2)!important;border:1px solid var(--line)!important}
+html body .user-avatar{background:var(--lime)!important;color:var(--lime-ink)!important}
+html body .chat-item{background:transparent!important;color:var(--text)!important;border:1px solid transparent!important}
+html body .chat-item:hover{background:var(--surface2)!important}
+html body .chat-item.active{background:rgba(184,241,59,.10)!important;border-color:rgba(184,241,59,.35)!important}
+html body .chat-title-wrap,html body .chat-item span{color:inherit}
+html body .chat-kind-icon,html body .chat-delete{color:var(--muted)!important}
+html body .legal-links a{color:var(--muted)!important}
+html body .backdrop{background:rgba(3,10,6,.65)!important}
+
+html body .topbar{background:rgba(11,26,18,.9)!important;border-bottom:1px solid var(--line2)!important;backdrop-filter:blur(12px);box-shadow:none!important;color:var(--text)}
+html body .task-context,html body .mobile-task-identity{color:var(--text)}
+html body .task-context-copy small{color:var(--muted)}
+html body .task-context-icon,html body #mobileTaskIcon{background:var(--lime)!important;color:var(--lime-ink)!important}
+html body .credits{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--line)!important;box-shadow:none!important}
+html body .credits .credit-buy-label{color:var(--lime)!important}
+html body .credit-coin{background:var(--sand)!important}
+html body .mobile-menu{color:var(--text)!important;background:var(--surface)!important;border:1px solid var(--line)!important}
+html body .mobile-all-tools-btn{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--line)!important}
+html body .desktop-tabs{background:var(--bg)!important;border-color:var(--line2)!important}
+html body .desktop-tab{background:var(--surface)!important;color:var(--muted)!important;border-color:var(--line)!important}
+html body .desktop-tab.active{background:rgba(184,241,59,.12)!important;color:var(--lime)!important;border-color:var(--lime)!important}
+
+/* ---------- messages ---------- */
+html body .messages{background:transparent!important}
+html body .msg.user .bubble{background:var(--surface2)!important;background-image:none!important;color:var(--text)!important;border:1px solid var(--line)!important;border-radius:20px 20px 6px 20px;box-shadow:none}
+html body .msg.assistant .bubble{background:transparent!important;border:0!important;box-shadow:none!important;padding:4px 2px!important;color:var(--text)!important}
+html body .msg .avatar{background:var(--surface2)!important;color:var(--lime)!important;border:1px solid var(--line)!important;box-shadow:none!important}
+html body .msg.user .avatar{background:var(--lime)!important;color:var(--lime-ink)!important;border-color:transparent!important}
+html body .bubble-content a{color:var(--lime)}
+html body .bubble-content code{background:var(--deep)!important;color:#d9efc3!important;border:1px solid var(--line2)}
+html body .bubble-content pre{background:var(--deep)!important;border:1px solid var(--line2)!important;color:#d9efc3!important}
+html body .bubble-content table{border-color:var(--line)!important}
+html body .bubble-content th{background:var(--surface2)!important;color:var(--lime)!important;border-color:var(--line)!important}
+html body .bubble-content td{border-color:var(--line2)!important}
+html body .bubble-content blockquote{border-color:var(--lime)!important;color:var(--muted)!important}
+html body .streaming-cursor,html body .bubble-content.streaming::after{background:var(--lime)!important;color:var(--lime)!important}
+html body .message-meta,html body .msg-actions .mini-btn{color:var(--muted)!important}
+html body .msg-actions .mini-btn{background:transparent!important;border-color:transparent!important}
+html body .msg-actions .mini-btn:hover{background:var(--surface)!important;color:var(--text)!important}
+html body .response-progress{background:var(--surface)!important;border:1px solid var(--line)!important;color:var(--text)!important;box-shadow:none!important}
+html body .stage-chip{background:var(--surface2)!important;color:var(--muted)!important}
+html body .stage-chip.active{background:rgba(184,241,59,.14)!important;color:var(--lime)!important}
+html body .stage-chip.done{color:var(--lime)!important}
+html body .answer-skeleton i{background:var(--surface2)!important}
+html body .thinking-spinner{border-color:var(--line)!important;border-top-color:var(--lime)!important}
+html body .file-card,html body .artifact-card{background:var(--surface)!important;border:1px solid var(--line)!important;color:var(--text)!important}
+html body .file-card small,html body .file-card-info small{color:var(--muted)!important}
+html body .file-card .file-preview{background:var(--surface2)!important;color:var(--text)!important;border:1px solid var(--line)!important}
+html body .artifact-image{background:var(--surface)!important;border-color:var(--line)!important}
+html body .agent-status{background:rgba(184,241,59,.10)!important;color:var(--lime)!important}
+html body .welcome h1,html body .welcome h2{color:var(--text)!important}
+html body .welcome p,html body .welcome small{color:var(--muted)!important}
+html body .suggestion{background:var(--surface)!important;border:1px solid var(--line)!important;color:var(--text)!important}
+html body .suggestion:hover{border-color:var(--lime)!important}
+html body .scroll-latest{background:var(--surface2)!important;color:var(--lime)!important;border:1px solid var(--line)!important}
+
+/* ---------- composer ---------- */
+html body .composer-zone{background:linear-gradient(transparent 0%,var(--bg) 38%)!important}
+html body .composer{background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important}
+html body .composer:focus-within{border-color:var(--lime)!important}
+html body .composer textarea{color:var(--text)!important;caret-color:var(--lime)}
+html body .composer textarea::placeholder{color:var(--muted)!important}
+html body .attachment-chip{background:var(--surface2)!important;color:var(--text)!important;border-color:var(--line)!important}
+html body .composer-more{background:var(--surface2)!important;color:var(--lime)!important;border:1px solid var(--line)!important}
+html body .status{color:var(--muted)}
+html body .send[data-state="streaming"]{background:transparent!important;border:1px solid var(--lime)!important;color:var(--lime)!important}
+
+/* ---------- modals, dialogs, toasts ---------- */
+html body .overlay{background:rgba(3,10,6,.72)!important}
+html body .modal,html body .aiway-dialog,html body .mobile-tools-panel,html body .command-box{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--line)!important;box-shadow:var(--shadow-lift)!important}
+html body .modal-head h2,html body .modal h2,html body .aiway-dialog h3{color:var(--text)!important}
+html body .modal p,html body .aiway-dialog-message,html body .aiway-dialog-note,html body .aiway-dialog-brand-copy small{color:var(--muted)!important}
+html body .aiway-dialog-icon{background:rgba(184,241,59,.12)!important;color:var(--lime)!important}
+html body .pay-usage-summary{background:var(--deep)!important;border:1px solid var(--line2)!important}
+html body .pay-usage-item{background:var(--surface)!important;border:1px solid var(--line2)!important;color:var(--muted)!important}
+html body .pay-usage-item b{color:var(--text)!important}
+html body .pay-usage-item.primary b{color:var(--lime)!important}
+html body .pay-usage-progress{background:var(--surface2)!important}
+html body .pay-usage-progress i{background:var(--lime)!important}
+html body .pay-usage-foot,html body .pay-usage-title small{color:var(--muted)!important}
+html body .pack{background:var(--deep)!important;border:1px solid var(--line)!important;color:var(--text)!important;box-shadow:none!important}
+html body .pack.featured{border-color:var(--lime)!important;background:rgba(184,241,59,.07)!important}
+html body .pack b{color:var(--lime)!important}
+html body .pack .pi-estimate{color:var(--text)!important}
+html body .pack .btn.soft{background:transparent!important;color:var(--lime)!important;border:1px solid var(--lime)!important}
+html body .pack small,html body .pack-validity-simple,html body .pack .label{color:var(--muted)!important}
+html body .pack .pack-token-label{color:var(--muted)!important}
+html body .payment-flow{background:var(--deep)!important;border:1px solid var(--line2)!important;color:var(--text)!important}
+html body .toast{background:var(--surface2)!important;color:var(--text)!important;border:1px solid var(--line)!important;box-shadow:var(--shadow-lift)!important}
+html body .signin-guide{background:var(--surface2)!important;color:var(--text)!important;border:1px solid var(--lime)!important}
+html body .support-messages{background:var(--deep)!important}
+html body .support-compose textarea,html body input[type="search"],html body .command-box input{background:var(--surface2)!important;color:var(--text)!important;border-color:var(--line)!important}
+html body .auth-progress{background:var(--surface2)!important;color:var(--text)!important;border:1px solid var(--line)!important}
+html body .desktop-context-menu{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--line)!important}
+html body .desktop-drop-zone{background:rgba(11,26,18,.88)!important;border-color:var(--lime)!important;color:var(--lime)!important}
+html body .desktop-preview-pane{background:var(--surface)!important;border-color:var(--line)!important}
+
+/* ---------- responsive layout ---------- */
+html body .main{min-width:0;background:transparent}
+html body .messages{padding-inline:max(14px,env(safe-area-inset-left)) max(14px,env(safe-area-inset-right))}
+html body .messages>.msg,html body .messages>.welcome{max-width:var(--content-w);margin-inline:auto}
+html body .bubble{max-width:min(94%,var(--content-w))}
+html body .composer-zone{padding-inline:max(12px,calc((100% - var(--content-w))/2))}
+
+@media (min-width:1024px){
+  html body .shell{display:grid!important;grid-template-columns:var(--shell-sidebar) minmax(0,1fr)!important}
+  html body .sidebar{position:relative!important;inset:auto!important;transform:none!important;width:auto!important;height:100%;box-shadow:none!important;border-inline-end:1px solid var(--line2);z-index:30}
+  html body .mobile-menu,html body .backdrop,html body .sidebar-collapse,html body .mobile-header-center{display:none!important}
+  html body .topbar{padding-inline:24px}
+  html body .messages{padding-inline:32px}
+  html body .task-core-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media (max-width:1023px){
+  html body .shell{grid-template-columns:1fr!important}
+  html body .top-tools-btn{display:none!important}
+  html body .mobile-menu{display:grid!important}
+  html body .task-core-grid{grid-template-columns:1fr!important}
+  html body .sidebar{width:min(86vw,320px)!important}
+  html body .composer-zone{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+  html body .modal{max-height:92dvh;overflow:auto}
+}
+@media (max-width:420px){
+  html body .intro-title{font-size:clamp(34px,10vw,44px)}
+  html body .topbar{gap:8px}
+  html body .credits .credit-buy-label{display:none}
+  html body .msg{gap:8px}
+}
+@media (prefers-reduced-motion:reduce){html body *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- composer row: [more] [options ...] [send] in reading direction ---------- */
+/* The legacy sheet pinned Send to the left with padding hacks (RTL-first). Send now follows the
+   reading direction: end of the row in both English and Arabic. */
+html body .composer{display:flex;flex-direction:column}
+html body .composer .composer-foot{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important;padding:0!important;min-height:0!important}
+html body .composer .composer-foot .composer-more{order:1!important}
+html body .composer .composer-foot>.estimate-toggle,html body .composer .composer-foot>.pill,html body .composer .composer-foot>.ratio-wrap{order:2!important}
+html body .composer .composer-foot>.status{order:3!important;flex:1 1 0!important;min-width:0}
+html body .composer .composer-foot>.send{order:4!important;margin-inline:auto 0!important;flex:none!important;position:relative!important}
+html body .desktop-tabs:empty{display:none!important}
+@media (min-width:1024px){
+  html body #menuBtn,html body .mobile-menu{display:none!important}
+  html body .composer-foot .composer-more{display:none!important}
+}
+@media (max-width:1023px){
+  html body .composer-foot .estimate-toggle,html body .composer-foot .pill:not(.attach-pill){display:none}
+}
+
+html body .task-pro-badge{display:none!important}
+html body .packs{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important}
+html body .intro-packages-btn,html body .intro-start{font-size:15px}
