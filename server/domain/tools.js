@@ -1,6 +1,7 @@
 import { appError } from "../core/http.js";
 import { db } from "../core/runtime.js";
 import { TRIAL_MODEL_FALLBACK } from "./credits.js";
+import { META_CHAT_MODEL_ID, META_IMAGE_MODEL_ID } from "./meta-models.js";
 
 export const DEFAULT_AI_TOOLS = [
   {
@@ -10,7 +11,7 @@ export const DEFAULT_AI_TOOLS = [
     description_ar: "كتابة الكود، إصلاح الأخطاء وشرح الحلول التقنية.",
     description_en: "Write code, fix bugs, and explain technical solutions.",
     tool_type: "text",
-    model_id: "deepseek/deepseek-v4-flash",
+    model_id: META_CHAT_MODEL_ID,
     is_active: true,
     sort_order: 10,
   },
@@ -22,7 +23,7 @@ export const DEFAULT_AI_TOOLS = [
     description_en:
       "Summarize text, articles, and files while preserving key points.",
     tool_type: "text",
-    model_id: "deepseek/deepseek-v4-flash",
+    model_id: META_CHAT_MODEL_ID,
     is_active: true,
     sort_order: 20,
   },
@@ -34,7 +35,7 @@ export const DEFAULT_AI_TOOLS = [
     description_en:
       "Create advertising copy, campaign ideas, and marketing content.",
     tool_type: "text",
-    model_id: "deepseek/deepseek-v4-flash",
+    model_id: META_CHAT_MODEL_ID,
     is_active: true,
     sort_order: 30,
   },
@@ -45,7 +46,7 @@ export const DEFAULT_AI_TOOLS = [
     description_ar: "كتابة وإعادة صياغة المحتوى بأساليب مختلفة.",
     description_en: "Write and rewrite content in different styles.",
     tool_type: "text",
-    model_id: "deepseek/deepseek-v4-flash",
+    model_id: META_CHAT_MODEL_ID,
     is_active: true,
     sort_order: 40,
   },
@@ -56,7 +57,7 @@ export const DEFAULT_AI_TOOLS = [
     description_ar: "ترجمة النصوص مع الحفاظ على المعنى والسياق.",
     description_en: "Translate text while preserving meaning and context.",
     tool_type: "text",
-    model_id: "deepseek/deepseek-v4-flash",
+    model_id: META_CHAT_MODEL_ID,
     is_active: true,
     sort_order: 50,
   },
@@ -68,7 +69,7 @@ export const DEFAULT_AI_TOOLS = [
     description_en:
       "Explain lessons, solve questions, and create study plans and reviews.",
     tool_type: "text",
-    model_id: "deepseek/deepseek-v4-flash",
+    model_id: META_CHAT_MODEL_ID,
     is_active: true,
     sort_order: 60,
   },
@@ -79,7 +80,7 @@ export const DEFAULT_AI_TOOLS = [
     description_ar: "تحليل الأفكار وخطط الأعمال والمحتوى المهني.",
     description_en: "Analyze ideas, business plans, and professional content.",
     tool_type: "text",
-    model_id: "deepseek/deepseek-v4-flash",
+    model_id: META_CHAT_MODEL_ID,
     is_active: true,
     sort_order: 70,
   },
@@ -92,7 +93,7 @@ export const DEFAULT_AI_TOOLS = [
     description_en:
       "Choose from different AI models and select the model that suits you best.",
     tool_type: "text",
-    model_id: "deepseek/deepseek-v4-flash",
+    model_id: META_CHAT_MODEL_ID,
     prompt_config: {
       _ui: {
         icon_svg:
@@ -106,10 +107,10 @@ export const DEFAULT_AI_TOOLS = [
     id: "image",
     name_ar: "الصور",
     name_en: "Images",
-    description_ar: "توليد الصور وتعديلها باستخدام أرخص نموذج FLUX.",
-    description_en: "Generate and edit images with the cheapest FLUX model.",
+    description_ar: "توليد الصور وتعديلها.",
+    description_en: "Generate and edit images.",
     tool_type: "image",
-    model_id: "black-forest-labs/flux.2-klein-4b",
+    model_id: META_IMAGE_MODEL_ID,
     is_active: true,
     sort_order: 100,
   },
@@ -142,6 +143,6 @@ export async function getToolModelSettings() {
 }
 
 export async function getTrialModelId() {
-  // Keep the trial pinned to OpenRouter free routing.
+  // The free trial runs on the same fixed model as paid chat, with strict per-run caps.
   return TRIAL_MODEL_FALLBACK;
 }

@@ -1,12 +1,16 @@
-import { generateImage, openRouterJson } from "../../providers/openrouter.js";
+import {
+  generateImage,
+  metaJson,
+  metaConfigured,
+} from "../../providers/meta.js";
 
 import { db } from "../../core/runtime.js";
 import { json, localize } from "../../core/http.js";
 import { requireUser, requireAdmin } from "../auth/service.js";
 import {
   getAvailableModels,
-  getOpenRouterImageModels,
-} from "../../providers/openrouter-catalog.js";
+  getImageModels,
+} from "../../domain/meta-models.js";
 import { getToolModelSettings, getAiTools } from "../../domain/tools.js";
 import { audit } from "./audit.js";
 import { sanitizeToolSvg } from "../../domain/tool-icons.js";
@@ -21,7 +25,7 @@ export async function modelSettings(req, res, locale) {
         a.pricing.completion -
         (b.pricing.prompt + b.pricing.completion),
     );
-    const imageModels = (await getOpenRouterImageModels()).sort(
+    const imageModels = (await getImageModels()).sort(
       (a, b) => (a.pricing.request || 0) - (b.pricing.request || 0),
     );
     return json(res, 200, {
@@ -29,8 +33,8 @@ export async function modelSettings(req, res, locale) {
       settings: await getToolModelSettings(),
       models,
       imageModels,
-      pricingSource: "OpenRouter Models API pricing",
-      pricingSourceUrl: "https://openrouter.ai/models",
+      pricingSource: "Meta Model API pricing",
+      pricingSourceUrl: "https://dev.meta.ai/docs/pricing-rate-limits",
       refreshedAt: new Date().toISOString(),
       catalogNote:
         "يتم ترتيب النماذج حسب مجموع سعر الإدخال والإخراج القياسي لكل مليون توكين",
@@ -42,9 +46,7 @@ export async function modelSettings(req, res, locale) {
       : req.body || {};
   const action = String(b.action || "bulk-models");
   const validText = new Set((await getAvailableModels()).map((x) => x.id));
-  const validImages = new Set(
-    (await getOpenRouterImageModels()).map((x) => x.id),
-  );
+  const validImages = new Set((await getImageModels()).map((x) => x.id));
   const clean = (v) => String(v ?? "").trim();
   const safeId = (v) =>
     clean(v)
@@ -162,25 +164,18 @@ export async function modelSettings(req, res, locale) {
       prompt = clean(b.prompt || "اختبار سريع للأداة").slice(0, 2000),
       model = clean(t.model_id),
       testStarted = Date.now();
-    if (!process.env.OPENROUTER_API_KEY)
-      return json(res, 500, { error: "OPENROUTER_API_KEY غير مضبوط" });
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      "X-Title": "AiWay Admin Preview",
-    };
+    if (!metaConfigured())
+      return json(res, 500, { error: "META_API_KEY غير مضبوط" });
     if (t.tool_type === "image") {
       if (!validImages.has(model))
         return json(res, 400, { error: "نموذج الصور غير صالح" });
-      const { response: r, data } = await generateImage(
-        {
-          model,
-          prompt,
-          n: 1,
-          provider: { sort: "throughput", allow_fallbacks: true },
-        },
-        headers,
-      );
+      const { response: r, data } = await generateImage({
+        model,
+        prompt,
+        n: 1,
+        response_format: "b64_json",
+        output_format: "png",
+      });
       if (!r.ok)
         return json(res, r.status, {
           error: data?.error?.message || "فشل اختبار نموذج الصور",
@@ -189,7 +184,7 @@ export async function modelSettings(req, res, locale) {
       return json(res, 200, {
         ok: true,
         image: item.b64_json
-          ? `data:${item.media_type || "image/png"};base64,${item.b64_json}`
+          ? `data:image/png;base64,${item.b64_json}`
           : item.url || "",
         model: data?.model || model,
         usage: data?.usage || {},
@@ -219,15 +214,16 @@ export async function modelSettings(req, res, locale) {
         0,
         Math.min(2, Number(t.temperature ?? pc?._admin?.temperature ?? 0.7)),
       ),
-      max_tokens: Math.max(
+      max_completion_tokens: Math.max(
         64,
         Math.min(2048, Number(t.max_tokens ?? pc?._admin?.max_tokens ?? 512)),
       ),
+      reasoning_effort: "minimal",
       stream: false,
     };
-    const { response: r, data } = await openRouterJson(
+    const { response: r, data } = await metaJson(
       "chat/completions",
-      { method: "POST", headers, body: JSON.stringify(body) },
+      { method: "POST", body: JSON.stringify(body) },
       60000,
     );
     if (!r.ok)

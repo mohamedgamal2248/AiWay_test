@@ -4,6 +4,6 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = "local-test-service-role";
 process.env.APP_JWT_SECRET =
   "local-test-secret-32-characters-minimum-do-not-deploy";
 process.env.PI_SECRET_KEY = "local-test-pi-secret";
-process.env.OPENROUTER_API_KEY = "local-test-openrouter-key";
+process.env.META_API_KEY = "local-test-meta-key";
 delete process.env.TELEGRAM_BOT_TOKEN;
 delete process.env.TELEGRAM_CHAT_ID;

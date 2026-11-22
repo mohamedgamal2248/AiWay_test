@@ -74,7 +74,7 @@ export async function loadAnalytics(client, query, providerInfo) {
         ? [
             {
               level: "danger",
-              title: "رصيد OpenRouter منخفض",
+              title: "رصيد مزود الذكاء الاصطناعي منخفض",
               message: `المتبقي $${available.toFixed(2)}`,
             },
           ]
@@ -102,7 +102,7 @@ export async function loadAnalytics(client, query, providerInfo) {
             {
               level: "warning",
               title: "التزام الرصيد أعلى من رصيد المزود",
-              message: "راجع رصيد OpenRouter ورصيد المستخدمين.",
+              message: "راجع رصيد Meta ورصيد المستخدمين.",
             },
           ]
         : []),

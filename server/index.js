@@ -31,9 +31,8 @@ export {
 } from "./features/auth/service.js";
 export {
   errorDetails,
-  openRouterError,
+  metaError,
   piApiError,
-  shouldTryModelFallback,
   handleError,
 } from "./core/errors.js";
 export {
@@ -44,12 +43,12 @@ export {
   TRIAL_TOKENS,
   PI_PRICE_BUFFER,
   TRIAL_MODEL_FALLBACK,
-  chargeGeminiUsage,
   chargeTokens,
   fitMessagesToModelContext,
   estimateChatCharge,
   reservationTokens,
-  resolveOpenRouterCharge,
+  resolveMetaCharge,
+  chargeFromProviderUsd,
   affordableOutputLimit,
   isLowBalance,
   classifyTokenChargeFailure,
@@ -67,23 +66,17 @@ export {
 } from "./domain/settings.js";
 export {
   getAvailableModels,
-  getOpenRouterImageModels,
-  getOpenRouterImageModelEndpoints,
-  GEMINI_IMAGE_MODELS,
+  getImageModels,
   getModel,
-} from "./providers/openrouter-catalog.js";
+  META_CHAT_MODEL_ID,
+  META_IMAGE_MODEL_ID,
+} from "./domain/meta-models.js";
 export {
   DEFAULT_AI_TOOLS,
   getAiTools,
   getToolModelSettings,
   getTrialModelId,
 } from "./domain/tools.js";
-export {
-  isFreeModel,
-  modelSupportsAttachmentTypes,
-  chooseTaskModel,
-  chooseAutoModel,
-} from "./domain/model-routing.js";
 export {
   claimFreeDailyUse,
   reserveAiTokens,

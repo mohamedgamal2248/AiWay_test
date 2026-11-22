@@ -2,6 +2,7 @@ import { handleAnnouncements } from "./announcements.js";
 import { handleSupport } from "./support.js";
 import { pageOptions } from "../../data/pagination.js";
 import { imageStorage } from "../../providers/storage.js";
+import { removeConversationFiles } from "../agents/artifacts.js";
 import {
   allowMethods,
   appError,
@@ -235,6 +236,9 @@ export default async function handler(req, res) {
       if (storageDeleteError)
         throw appError("DATABASE_ERROR", {}, storageDeleteError);
     }
+
+    // Agent files (artifacts, uploads, workspace) live in a separate private bucket.
+    await removeConversationFiles(s, user.id, id);
 
     const { data: deletedRows, error } = await s
       .from("conversations")

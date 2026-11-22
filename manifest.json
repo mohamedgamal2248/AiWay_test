@@ -1,7 +1,7 @@
 {
   "name": "AiWay",
   "short_name": "AiWay",
-  "description": "AiWay — AI chat and image tools powered by Pi Network",
+  "description": "AiWay — AI agents on Pi Network: build Pi apps, generate images and create documents.",
   "start_url": "/?source=pwa",
   "id": "/?source=pwa",
   "scope": "/",
@@ -9,8 +9,8 @@
   "orientation": "portrait-primary",
   "background_color": "#faf8fd",
   "theme_color": "#6f2dbd",
-  "lang": "ar",
-  "dir": "rtl",
+  "lang": "en",
+  "dir": "auto",
   "icons": [
     {
       "src": "/aiway-logo.png",

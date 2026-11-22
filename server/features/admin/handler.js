@@ -1,6 +1,6 @@
 import { modelSettings } from "./model-settings.js";
 
-import { gemini } from "../../providers/openrouter-account.js";
+import { metaProviderInfo } from "../../providers/meta-account.js";
 import { controlCenter } from "./control-center.js";
 
 import { loadAnalytics } from "./analytics.js";
@@ -54,7 +54,11 @@ export default async function handler(req, res) {
     const s = db();
     const expirySweep = await s.rpc("expire_all_paid_tokens");
     if (expirySweep.error) throw expirySweep.error;
-    return json(res, 200, await loadAnalytics(s, req.query, await gemini()));
+    return json(
+      res,
+      200,
+      await loadAnalytics(s, req.query, await metaProviderInfo()),
+    );
   } catch (error) {
     return handleError(
       error,

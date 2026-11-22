@@ -8,14 +8,22 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",
-    "jose": "6.1.0"
+    "docx": "^9.16.0",
+    "exceljs": "^4.4.0",
+    "jose": "6.1.0",
+    "jszip": "^3.10.2",
+    "mammoth": "^1.13.0",
+    "pdfkit": "^0.17.2",
+    "pptxgenjs": "^4.0.1",
+    "unpdf": "^1.9.1"
   },
   "devDependencies": {
+    "@fontsource/noto-naskh-arabic": "^5.3.0",
     "embedded-postgres": "18.4.0-beta.17",
     "eslint": "9.39.5",
+    "espree": "10.4.0",
     "pg": "8.16.3",
-    "prettier": "3.6.2",
-    "espree": "10.4.0"
+    "prettier": "3.6.2"
   },
   "scripts": {
     "dev": "node --env-file-if-exists=.env.local scripts/dev.mjs",
@@ -27,5 +35,9 @@
     "verify": "npm run check && npm run format:check && npm run lint && npm test && npm run build",
     "format": "prettier --write server api scripts tests",
     "format:check": "prettier --check server api scripts tests"
+  },
+  "overrides": {
+    "image-size": "^2.1.0",
+    "uuid": "^11.1.1"
   }
 }
