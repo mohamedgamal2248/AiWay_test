@@ -2,6 +2,7 @@ import { modelSettings } from "./model-settings.js";
 
 import { metaProviderInfo } from "../../providers/meta-account.js";
 import { controlCenter } from "./control-center.js";
+import { agentQuality } from "./agent-quality.js";
 
 import { loadAnalytics } from "./analytics.js";
 
@@ -41,6 +42,8 @@ export default async function handler(req, res) {
       return await controlCenter(req, res, locale, adminUser);
     }
     if (mode === "model-settings") return await modelSettings(req, res, locale);
+    if (mode === "agents-quality" && req.method === "GET")
+      return await agentQuality(req, res);
     if (req.method !== "GET")
       return json(res, 405, {
         error: localize(

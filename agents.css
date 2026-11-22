@@ -20,3 +20,45 @@
 .artifact-card .file-card-info{flex:1 1 auto;min-width:0}
 .artifact-card .file-card-actions{width:auto!important;flex:none!important}
 .artifact-card .file-card-actions button{flex:none!important}
+
+/* ---- cost cap, receipt, continue, templates, preview tools, library ---- */
+.run-cap{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 8px;padding:6px 8px 6px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);font-size:12.5px;color:var(--muted)}
+.run-cap[hidden]{display:none}
+.run-cap-chips{display:flex;gap:6px;flex-wrap:wrap}
+.run-cap-chip{min-height:36px;min-width:44px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:600;font-size:12.5px;cursor:pointer}
+.run-cap-chip.on{background:var(--lime);border-color:var(--lime);color:var(--lime-ink)}
+.template-chip{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;padding:4px 6px 4px 12px;border-radius:14px;border:1px solid var(--lime);background:rgba(184,241,59,.10);color:var(--lime);font-size:13px}
+.template-chip button{width:36px;height:36px;border-radius:50%;border:0;background:transparent;color:inherit;font-size:20px;cursor:pointer}
+.template-gallery{margin:6px 0 4px;text-align:start}
+.template-head{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:8px}
+.template-card{display:flex;flex-direction:column;gap:3px;min-height:76px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--text);text-align:start;cursor:pointer}
+.template-card small{color:var(--muted);line-height:1.4}
+.template-card.on,.template-card:hover{border-color:var(--lime)}
+.receipt{display:inline-block;vertical-align:top}
+.receipt summary{cursor:pointer;list-style:none;min-height:28px;display:inline-flex;align-items:center;gap:6px}
+.receipt summary::-webkit-details-marker{display:none}
+.receipt[open] summary i{transform:rotate(180deg)}
+.receipt ul{list-style:none;margin:6px 0 0;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);min-width:220px}
+.receipt li{display:flex;justify-content:space-between;gap:16px;padding:3px 0;font-size:12.5px}
+.receipt .receipt-total{border-top:1px solid var(--line);margin-top:4px;padding-top:6px;color:var(--lime)}
+.receipt-foot{margin-top:5px;font-size:11.5px;color:var(--muted)}
+.continue-run{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid var(--lime);background:rgba(184,241,59,.08);font-size:13px}
+.continue-run .btn{min-height:44px}
+.preview-tools{display:inline-flex;gap:6px;margin-inline-end:6px}
+#previewModal.preview-full .modal,#previewModal.preview-full .preview-modal{width:100vw!important;max-width:100vw!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important}
+#previewModal .preview-frame{background:#fff}
+.library-btn{display:flex;align-items:center;justify-content:center;gap:8px}
+.library-modal{max-width:640px;width:calc(100vw - 24px);max-height:88dvh;display:flex;flex-direction:column}
+.library-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.library-tab{min-height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--muted);font-weight:600;cursor:pointer}
+.library-tab.on{background:rgba(184,241,59,.12);border-color:var(--lime);color:var(--lime)}
+.library-list{overflow:auto;display:flex;flex-direction:column;gap:8px;min-height:120px}
+.library-item{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.library-main{min-width:0;flex:1 1 200px}
+.library-main b,.library-main small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.library-main small{color:var(--muted);margin-top:2px;font-size:12px}
+.library-actions{display:flex;gap:6px;flex-wrap:wrap}
+.library-actions button{min-height:40px}
+.library-empty{padding:28px 12px;text-align:center;color:var(--muted)}
+.library-actions .file-preview{color:var(--text);border:1px solid var(--line);background:transparent;border-radius:12px;padding:0 14px;font-weight:600;cursor:pointer}

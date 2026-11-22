@@ -58,6 +58,10 @@ import { buildTools } from "../agents/tools/index.js";
 import { runAgent } from "../agents/runner.js";
 import { publicArtifact, removeArtifacts } from "../agents/artifacts.js";
 import { prepareAgentAttachments } from "../agents/attachments.js";
+import { buildReceipt } from "../agents/receipt.js";
+import { templateBlueprint } from "../agents/templates.js";
+import { preparePreview, servePreview } from "../agents/preview.js";
+import { listLibrary } from "../agents/library.js";
 
 function hasUnclosedFencedBlock(text) {
   const matches = String(text || "").match(/```/g);
@@ -115,6 +119,12 @@ export default async function handler(req, res) {
       return await prepareArtifactDownload(req, res);
     if (req.method === "POST" && downloadAction === "prepare-artifact-views")
       return await prepareArtifactViews(req, res);
+    if (req.method === "POST" && downloadAction === "prepare-preview")
+      return await preparePreview(req, res);
+    if (req.method === "GET" && downloadAction === "preview")
+      return await servePreview(req, res);
+    if (req.method === "POST" && downloadAction === "library")
+      return await listLibrary(req, res);
     if (
       (req.method === "GET" || req.method === "POST") &&
       downloadAction === "download-file"
@@ -142,6 +152,8 @@ export default async function handler(req, res) {
       continueFromMessageId: rawContinueFromMessageId,
       taskId: rawTaskId,
       clientOmittedContextMessages = 0,
+      runCapTokens: rawRunCap = 0,
+      templateId: rawTemplateId = "",
     } = req.body || {};
     const taskId = cleanText(rawTaskId, 30).toLowerCase();
     // Agents are selected by task id. Every other id (including the "all-models"
@@ -396,7 +408,13 @@ The following JSON is a trusted AiWay tool profile. Follow it as system-level sp
 ${JSON.stringify(toolInstructionPayload)}`
       : "";
     const systemPrompt = isAgent
-      ? agent.prompt({ language })
+      ? agent.prompt({
+          language,
+          template:
+            agent.id === "pi-app-builder"
+              ? templateBlueprint(rawTemplateId)
+              : "",
+        })
       : chatSystemPrompt({
           language,
           taskPrompt:
@@ -475,6 +493,13 @@ ${JSON.stringify(toolInstructionPayload)}`
             ),
           });
         reservedTokenAmount = Math.ceil(usd / TOKEN_USD);
+        // Optional user cap for this run (never below what the agent needs to start).
+        const cap = Math.floor(Number(rawRunCap) || 0);
+        if (cap >= 100 && cap < reservedTokenAmount)
+          reservedTokenAmount = Math.max(
+            cap,
+            Math.ceil(Number(limits.minUsd || 0.005) / TOKEN_USD),
+          );
       } else {
         const searchBuffer = webSearch
           ? (limits.maxToolCalls - 1) * META_PRICING.chat.web_search + 0.004
@@ -664,6 +689,14 @@ ${JSON.stringify(toolInstructionPayload)}`
         reservedTokenAmount,
       );
 
+    const receipt = buildReceipt({
+      usage,
+      chargedTokens: purchased ? charge.chargedTokens : 1,
+      steps: run.steps,
+      toolCalls: run.toolCalls,
+      elapsedMs: run.elapsedMs,
+    });
+
     const previousUsage =
       continuationTarget?.token_usage &&
       typeof continuationTarget.token_usage === "object"
@@ -697,6 +730,16 @@ ${JSON.stringify(toolInstructionPayload)}`
       images: usage.images,
       taskId: taskId || previousUsage.taskId || null,
       agentId: isAgent ? agent.id : null,
+      billing: purchased ? "paid" : "trial",
+      capTokens:
+        isAgent && purchased && reservedTokenAmount
+          ? reservedTokenAmount
+          : undefined,
+      templateId:
+        isAgent && rawTemplateId
+          ? String(rawTemplateId).slice(0, 40)
+          : undefined,
+      receipt,
       steps: run.steps,
       toolCalls: run.toolCalls,
       stopReason: run.stopReason,
@@ -802,6 +845,8 @@ ${JSON.stringify(toolInstructionPayload)}`
       remainingTokens,
       lowBalance: isLowBalance(remainingTokens, charge.chargedTokens),
       agentId: isAgent ? agent.id : undefined,
+      receipt,
+      capTokens: isAgent && purchased ? reservedTokenAmount : undefined,
       steps: run.steps,
       stopReason: run.stopReason,
       artifacts: run.artifacts.map((a) => ({

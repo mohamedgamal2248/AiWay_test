@@ -21,6 +21,7 @@ import { getAiTools } from "../../domain/tools.js";
 import { getChatModel, getImageModel } from "../../domain/meta-models.js";
 import { estimateImageCharge } from "../../domain/image-pricing.js";
 import { agentTools, resolveAgent, isAgentTask } from "../agents/registry.js";
+import { templateCatalog } from "../agents/templates.js";
 
 // This endpoint bootstraps the app. Model choice is intentionally hidden from users, so
 // the catalog it returns is the single fixed chat model plus the single image model.
@@ -84,7 +85,11 @@ export default async function handler(req, res) {
         // Agents run several steps, so the figure is an upper bound (what is held
         // while the run is in progress); the final charge is the actual usage.
         const limits = resolveAgent(taskId).limits;
-        const maxUsd = Number(limits.reserveUsd || 0.05);
+        let maxUsd = Number(limits.reserveUsd || 0.05);
+        // The per-run cap the user picked lowers the upper bound shown in the dialog.
+        const cap = Math.floor(Number(body.runCapTokens) || 0);
+        if (cap >= 100 && cap * TOKEN_USD < maxUsd)
+          maxUsd = Math.max(cap * TOKEN_USD, Number(limits.minUsd || 0.005));
         return json(res, 200, {
           type: "agent",
           agentId: taskId,
@@ -197,6 +202,7 @@ export default async function handler(req, res) {
       featureFlags: await getFeatureFlags(),
       globalAnnouncement: await getGlobalAnnouncement(),
       modelSelection: "hidden",
+      templates: templateCatalog(),
       refreshedAt: new Date().toISOString(),
     });
   } catch (error) {
