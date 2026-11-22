@@ -1,5 +1,11 @@
-import { generationUsage } from "../providers/openrouter.js";
+import {
+  META_CHAT_MODEL_ID,
+  META_LONG_CONTEXT_THRESHOLD,
+  META_PRICING,
+} from "./meta-models.js";
 import { appError } from "../core/http.js";
+
+const META_WEB_SEARCH_USD = META_PRICING.chat.web_search;
 
 export const TOKEN_USD = 0.00001;
 
@@ -13,140 +19,39 @@ export const TRIAL_TOKENS = 10;
 
 export const PI_PRICE_BUFFER = 0.05;
 
-export const TRIAL_MODEL_FALLBACK = "openrouter/free";
+export const TRIAL_MODEL_FALLBACK = META_CHAT_MODEL_ID;
 
 export const tokensForUsd = (usd) =>
   Math.round((Number(usd) * PROVIDER_BUDGET_SHARE) / TOKEN_USD);
 
-export function chargeGeminiUsage(
-  price = {},
-  usageMetadata = {},
-  { webSearch = false, fallbackUsd = 0 } = {},
-) {
-  const promptBase = Math.max(
-    0,
-    Number(
-      usageMetadata.promptTokenCount || usageMetadata.inputTokenCount || 0,
-    ),
-  );
-  const toolPromptTotal = Math.max(
-    0,
-    Number(usageMetadata.toolUsePromptTokenCount || 0),
-  );
-  const promptTotal = promptBase + toolPromptTotal;
-  const responseTotal = Math.max(
-    0,
-    Number(
-      usageMetadata.candidatesTokenCount ||
-        usageMetadata.responseTokenCount ||
-        usageMetadata.outputTokenCount ||
-        0,
-    ),
-  );
-  const thoughtsTotal = Math.max(
-    0,
-    Number(usageMetadata.thoughtsTokenCount || 0),
-  );
-  const outputTotal = responseTotal + thoughtsTotal;
-  const normalizeModality = (value) =>
-    String(value || "")
-      .toUpperCase()
-      .replace(/^MODALITY_/, "");
-  const sumDetails = (details) =>
-    (Array.isArray(details) ? details : []).reduce((map, item) => {
-      const key = normalizeModality(item?.modality || item?.type || "TEXT");
-      map[key] = (map[key] || 0) + Math.max(0, Number(item?.tokenCount || 0));
-      return map;
-    }, {});
-  const inputDetails = sumDetails(
-    usageMetadata.promptTokensDetails || usageMetadata.inputTokensDetails,
-  );
-  const toolInputDetails = sumDetails(usageMetadata.toolUsePromptTokensDetails);
-  for (const [modality, count] of Object.entries(toolInputDetails))
-    inputDetails[modality] = (inputDetails[modality] || 0) + count;
-  const outputDetails = sumDetails(
-    usageMetadata.candidatesTokensDetails ||
-      usageMetadata.responseTokensDetails ||
-      usageMetadata.outputTokensDetails,
-  );
-  const hasInputDetails = Object.keys(inputDetails).length > 0;
-  const hasOutputDetails = Object.keys(outputDetails).length > 0;
-  const rate = (side, modality) => {
-    const input = side === "input";
-    const key = `${modality.toLowerCase()}${input ? "Input" : "Output"}`;
-    const imageOutputRate =
-      !input && modality === "IMAGE"
-        ? Number(price.imageOutputPerMillion || 0) / 1e6
-        : 0;
-    return Math.max(
-      0,
-      Number(
-        price[key] ||
-          imageOutputRate ||
-          (input ? price.prompt : price.completion) ||
-          0,
-      ),
-    );
-  };
-  const calculate = (details, total, side) => {
-    if (!Object.keys(details).length) return total * rate(side, "TEXT");
-    return Object.entries(details).reduce(
-      (sum, [modality, count]) => sum + Number(count) * rate(side, modality),
-      0,
-    );
-  };
-  const inputUsd = calculate(inputDetails, promptTotal, "input");
-  const outputUsd =
-    calculate(outputDetails, responseTotal, "output") +
-    thoughtsTotal * rate("output", "TEXT");
-  const requestUsd = hasOutputDetails
-    ? 0
-    : Math.max(0, Number(price.request || 0));
-  const webUsd = webSearch
-    ? Math.max(0, Number(price.web_search ?? price.webSearch ?? 0.01))
-    : 0;
-  let providerUsd = inputUsd + outputUsd + requestUsd + webUsd;
-  let costSource =
-    hasInputDetails || hasOutputDetails
-      ? "gemini_usage_by_modality"
-      : "gemini_usage_tokens";
-  if (!hasInputDetails && !hasOutputDetails && Number(fallbackUsd) > 0) {
-    providerUsd = Number(fallbackUsd);
-    costSource = "model_fixed_price_fallback";
-  }
-  return {
-    input: promptTotal,
-    output: outputTotal,
-    inputUsd,
-    outputUsd,
-    requestUsd,
-    webUsd,
-    providerUsd,
-    costSource,
-    tokenUsd: TOKEN_USD,
-    markup: MARKUP,
-    chargedTokens: Math.max(1, Math.ceil(providerUsd / TOKEN_USD)),
-    thoughts: thoughtsTotal,
-    modalityUsage: { input: inputDetails, output: outputDetails },
-  };
-}
-
+// Meta reports prompt/completion token counts but no USD cost, so every charge is computed
+// from the fixed price table. Reasoning tokens are billed as output and are already
+// included in completion_tokens; cached prompt tokens are charged at the full rate
+// (conservative). Input above the long-context threshold uses the higher tier.
 export function chargeTokens(price, usage = {}, webSearch = false) {
   const input = Number(usage.prompt_tokens || usage.input_tokens || 0);
   const output = Number(usage.completion_tokens || usage.output_tokens || 0);
-  const reportedCost = Number(usage.cost || 0);
-  const webSearchFallbackUsd = webSearch ? Number(price?.webSearch || 0.01) : 0;
-  const fallbackCost =
-    input * Number(price?.prompt || 0) +
-    output * Number(price?.completion || 0) +
-    webSearchFallbackUsd;
-  const hasReportedCost = Number.isFinite(reportedCost) && reportedCost > 0;
-  const providerUsd = hasReportedCost ? reportedCost : fallbackCost;
+  const long = input > META_LONG_CONTEXT_THRESHOLD;
+  const promptRate = Number((long && price?.longPrompt) || price?.prompt || 0);
+  const completionRate = Number(
+    (long && price?.longCompletion) || price?.completion || 0,
+  );
+  const searches = Math.max(
+    0,
+    Number(
+      usage.web_search_requests ??
+        usage.server_tool_use?.web_search_requests ??
+        (webSearch ? 1 : 0),
+    ),
+  );
+  const webUsd = searches * Number(price?.web_search ?? price?.webSearch ?? 0);
+  const providerUsd = input * promptRate + output * completionRate + webUsd;
   return {
     input,
     output,
+    webUsd,
     providerUsd,
-    costSource: hasReportedCost ? "openrouter_usage" : "catalog_estimate",
+    costSource: "meta_usage_tokens",
     tokenUsd: TOKEN_USD,
     markup: MARKUP,
     chargedTokens: Math.max(1, Math.ceil(providerUsd / TOKEN_USD)),
@@ -193,7 +98,7 @@ export function attachmentTokenEstimate(attachment = {}) {
     Number(attachment.size || attachment.size_bytes || 0),
   );
   if (type.startsWith("image/")) {
-    // OpenRouter ultimately reports native multimodal token usage. Before sending,
+    // The provider reports native multimodal token usage afterwards. Before sending,
     // dimensions are not always available, so use a conservative size-based band.
     if (!size) return 1050;
     if (size <= 350_000) return 750;
@@ -380,10 +285,9 @@ export function estimateChatCharge(
   const requestUsd = Math.max(0, Number(price?.request || 0));
   const inputUsd = inputTokens * promptRate;
   const outputUsd = reservedOutputTokens * completionRate;
-  // Current OpenRouter web-plugin pricing is normally $0.005/request; use a
-  // model-catalog value when supplied and otherwise this documented baseline.
+  // Built-in search is billed per query; reserve one query up front.
   const webUsd = webSearch
-    ? Math.max(0, Number(price?.web_search ?? price?.webSearch ?? 0.005))
+    ? Math.max(0, Number(price?.web_search ?? price?.webSearch ?? 0.0025))
     : 0;
   const providerUsd = inputUsd + outputUsd + requestUsd + webUsd;
   return {
@@ -412,44 +316,31 @@ export function reservationTokens(estimatedTokens, kind = "chat") {
   );
 }
 
-export async function resolveOpenRouterCharge({
+// Final charge for a whole agent run: the run's provider USD (model tokens of every
+// step plus tool costs such as searches and images) converted to AiWay tokens.
+export function chargeFromProviderUsd(providerUsd, usage = {}) {
+  const usd = Math.max(0, Number(providerUsd) || 0);
+  return {
+    input: Number(usage.prompt_tokens || 0),
+    output: Number(usage.completion_tokens || 0),
+    webUsd: Number(usage.webSearches || 0) * META_WEB_SEARCH_USD,
+    providerUsd: usd,
+    costSource: "meta_usage_tokens",
+    tokenUsd: TOKEN_USD,
+    markup: MARKUP,
+    chargedTokens: Math.max(1, Math.ceil(usd / TOKEN_USD)),
+  };
+}
+
+export function resolveMetaCharge({
   usage = {},
-  generationId = "",
   price = {},
   webSearch = false,
   fallbackUsd = 0,
 } = {}) {
-  let normalizedUsage = { ...usage, cost: Number(usage.cost || 0) };
-  if (
-    !(normalizedUsage.cost > 0) &&
-    generationId &&
-    process.env.OPENROUTER_API_KEY
-  ) {
-    try {
-      const data = await generationUsage(generationId);
-      if (data)
-        normalizedUsage = {
-          ...normalizedUsage,
-          ...data.usage,
-          prompt_tokens:
-            data.usage?.prompt_tokens ??
-            data.tokens_prompt ??
-            usage.prompt_tokens,
-          completion_tokens:
-            data.usage?.completion_tokens ??
-            data.tokens_completion ??
-            usage.completion_tokens,
-          cost: Number(data.usage?.cost ?? data.cost ?? data.total_cost ?? 0),
-        };
-    } catch (error) {
-      console.warn(
-        "[OPENROUTER_GENERATION_COST_LOOKUP_FAILED]",
-        error.code || error.message,
-      );
-    }
-  }
-  const result = chargeTokens(price, normalizedUsage, webSearch);
-  if (!(normalizedUsage.cost > 0) && fallbackUsd > 0)
+  const result = chargeTokens(price, usage, webSearch);
+  const hasUsage = result.input > 0 || result.output > 0;
+  if (!hasUsage && fallbackUsd > 0)
     return {
       ...result,
       providerUsd: fallbackUsd,

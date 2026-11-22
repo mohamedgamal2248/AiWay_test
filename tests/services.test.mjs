@@ -2,11 +2,9 @@ import "./setup.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { requestJson } from "../server/providers/http.js";
-import { normalizeImagePricing } from "../server/providers/openrouter-catalog.js";
-import {
-  resolveOpenRouterCharge,
-  chargeTokens,
-} from "../server/domain/credits.js";
+import { getChatModel } from "../server/domain/meta-models.js";
+import { estimateImageCharge } from "../server/domain/image-pricing.js";
+import { resolveMetaCharge, chargeTokens } from "../server/domain/credits.js";
 import { setDatabaseClientForTests } from "../server/core/runtime.js";
 import {
   getFeatureFlags,
@@ -22,10 +20,6 @@ import {
   verifyDownloadTicket,
 } from "../server/features/auth/service.js";
 import { ensureConversationOwner } from "../server/data/ownership.js";
-import {
-  chooseAutoModel,
-  isTextChatModel,
-} from "../server/domain/model-routing.js";
 import { imageStorage } from "../server/providers/storage.js";
 import imageHandler from "../api/image.js";
 import chatHandler from "../api/chat.js";
@@ -162,41 +156,49 @@ test("provider invalid JSON and network failures return controlled errors", asyn
     },
   );
 });
-test("image endpoint pricing arrays preserve image and megapixel rates", () => {
-  assert.deepEqual(
-    normalizeImagePricing([
-      { billable: "output_image", unit: "image", cost_usd: 0.03 },
-      { billable: "output_image", unit: "image", cost_usd: 0.05 },
-      { billable: "output_image", unit: "megapixel", cost_usd: 0.014 },
-    ]),
-    { image: 0.05, megapixel: 0.014 },
-  );
+test("Muse Image is a flat per-image price independent of tokens", () => {
+  const one = estimateImageCharge(1);
+  assert.equal(one.providerUsd, 0.01);
+  assert.equal(one.chargedTokens, 1000);
+  assert.equal(estimateImageCharge(4).chargedTokens, 4000);
 });
-test("image usage stays funded when the generation-cost service fails", async () => {
-  await withFetch(
-    async () => {
-      throw Error("cost lookup offline");
-    },
-    async () => {
-      const charge = await resolveOpenRouterCharge({
-        usage: {},
-        generationId: "image-request",
-        price: { image: 0.03 },
-        fallbackUsd: 0.03,
-      });
-      assert.equal(charge.providerUsd, 0.03);
-      assert.equal(charge.chargedTokens, 3000);
-      assert.equal(charge.pricingBasis, "estimate");
-    },
-  );
+test("image usage stays funded when the provider reports no usage", () => {
+  const charge = resolveMetaCharge({
+    usage: {},
+    price: { image: 0.01 },
+    fallbackUsd: 0.01,
+  });
+  assert.equal(charge.providerUsd, 0.01);
+  assert.equal(charge.chargedTokens, 1000);
+  assert.equal(charge.pricingBasis, "estimate");
 });
-test("text usage keeps authoritative provider cost and legacy rounding", () => {
+test("text usage is priced from the fixed Ember table", () => {
+  const { pricing } = getChatModel();
+  const charge = chargeTokens(pricing, {
+    prompt_tokens: 100_000,
+    completion_tokens: 20_000,
+  });
+  // 100k * $0.10/M + 20k * $0.50/M = $0.02
+  assert.ok(Math.abs(charge.providerUsd - 0.02) < 1e-9);
+  assert.equal(charge.chargedTokens, 2000);
+  assert.equal(charge.costSource, "meta_usage_tokens");
+});
+test("input above 200K tokens is billed at the long-context rate", () => {
+  const { pricing } = getChatModel();
+  const charge = chargeTokens(pricing, {
+    prompt_tokens: 300_000,
+    completion_tokens: 1000,
+  });
+  assert.ok(Math.abs(charge.providerUsd - (0.09 + 0.0015)) < 1e-9);
+});
+test("web search is billed per query on top of tokens", () => {
+  const { pricing } = getChatModel();
   const charge = chargeTokens(
-    { prompt: 0.000001, completion: 0.000002 },
-    { prompt_tokens: 100, completion_tokens: 50, cost: 0.002 },
+    pricing,
+    { prompt_tokens: 0, completion_tokens: 0, web_search_requests: 2 },
+    true,
   );
-  assert.equal(charge.providerUsd, 0.002);
-  assert.equal(charge.chargedTokens, 200);
+  assert.ok(Math.abs(charge.providerUsd - 0.005) < 1e-9);
 });
 test("control database outage does not enable features", async () => {
   setDatabaseClientForTests(
@@ -299,32 +301,20 @@ test("download tickets cannot be used as app sessions", async () => {
     (e) => e.code === "UNAUTHORIZED",
   );
 });
-test("automatic model routing excludes models without text output", async () => {
-  assert.equal(isTextChatModel({ outputModalities: ["image"] }), false);
-  setDatabaseClientForTests(
-    fakeClient({ ai_tools: { data: [], error: null } }),
+test("the model catalog is a single hidden chat model", async () => {
+  const { getAvailableModels, getModel } = await import(
+    "../server/domain/meta-models.js"
   );
-  await withFetch(
-    async () =>
-      Response.json({
-        data: [
-          {
-            id: "test/text",
-            architecture: {
-              input_modalities: ["text"],
-              output_modalities: ["text"],
-            },
-            pricing: { prompt: 0, completion: 0 },
-          },
-        ],
-      }),
-    async () => {
-      const model = await chooseAutoModel("Explain a small function");
-      assert.ok(isTextChatModel(model));
-    },
+  const models = await getAvailableModels();
+  assert.equal(models.length, 1);
+  assert.equal(models[0].id, "muse-ember-1.0");
+  // Any id stored by older clients resolves to the fixed model.
+  assert.equal(
+    (await getModel("deepseek/deepseek-v4-flash")).id,
+    "muse-ember-1.0",
   );
 });
-test("OpenRouter image outage releases the existing token reservation", async () => {
+test("Meta image outage releases the existing token reservation", async () => {
   const user = {
     id: "11111111-1111-4111-8111-111111111111",
     pi_uid: "owner",
@@ -358,25 +348,11 @@ test("OpenRouter image outage releases the existing token reservation", async ()
     res = response();
   await withFetch(
     async (url) => {
-      if (String(url).endsWith("/images"))
-        return Response.json(
-          { error: { message: "Service unavailable" } },
-          { status: 503 },
-        );
-      if (String(url).endsWith("/endpoints"))
-        return Response.json({ data: [] });
-      return Response.json({
-        data: [
-          {
-            id: "black-forest-labs/flux.2-klein-4b",
-            architecture: {
-              input_modalities: ["text"],
-              output_modalities: ["image"],
-            },
-            pricing: { image: 0.03 },
-          },
-        ],
-      });
+      assert.ok(String(url).endsWith("/images/generations"));
+      return Response.json(
+        { error: { message: "Service unavailable" } },
+        { status: 503 },
+      );
     },
     async () => {
       await imageHandler(
@@ -388,7 +364,6 @@ test("OpenRouter image outage releases the existing token reservation", async ()
             conversationId: "conversation",
             prompt: "A blue sky",
             requestId: "image-test-request",
-            modelId: "black-forest-labs/flux.2-klein-4b",
           },
         },
         res,
@@ -531,7 +506,7 @@ test("streaming chat retains delta, saved assistant and final billing events", a
             choices: [
               { delta: { content: "Hello world" }, finish_reason: "stop" },
             ],
-            usage: { prompt_tokens: 100, completion_tokens: 50, cost: 0.002 },
+            usage: { prompt_tokens: 100, completion_tokens: 50 },
           }) +
           "\n\ndata: [DONE]\n\n",
       ),
@@ -543,7 +518,6 @@ test("streaming chat retains delta, saved assistant and final billing events", a
           headers: { authorization: "Bearer " + token },
           body: {
             conversationId: "conversation",
-            modelId: "deepseek/deepseek-v4-flash",
             taskId: "all-models",
             requestId: "chat-stream-test",
             messages: [{ role: "user", content: "Say hello" }],
@@ -559,7 +533,7 @@ test("streaming chat retains delta, saved assistant and final billing events", a
     .map((line) => JSON.parse(line.slice(6)));
   assert.equal(res.statusCode, 200, JSON.stringify(events));
   assert.equal(events.find((e) => e.type === "delta")?.text, "Hello world");
-  assert.equal(events.find((e) => e.type === "done")?.chargedTokens, 200);
+  assert.equal(events.find((e) => e.type === "done")?.chargedTokens, 4);
   assert.equal(
     saved.find((m) => m.role === "assistant")?.content,
     "Hello world",

@@ -123,5 +123,10 @@
   ],
   "buildCommand": "npm run build",
   "outputDirectory": "public",
-  "installCommand": "npm ci --omit=dev --ignore-scripts"
+  "installCommand": "npm ci --omit=dev --ignore-scripts",
+  "functions": {
+    "api/chat.js": {
+      "includeFiles": "server/assets/**"
+    }
+  }
 }

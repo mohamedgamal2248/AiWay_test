@@ -1,5 +1,12 @@
 import { estimateImageCharge } from "../../domain/image-pricing.js";
-import { generateImage } from "../../providers/openrouter.js";
+import {
+  museImage,
+  detectSafeImageType,
+  imageExtension,
+  SAFE_IMAGE_TYPES,
+} from "./muse.js";
+import { getImageModel } from "../../domain/meta-models.js";
+import { metaConfigured } from "../../providers/meta.js";
 import { imageStorage } from "../../providers/storage.js";
 import {
   allowMethods,
@@ -13,16 +20,11 @@ import {
   requestIp,
 } from "../../core/http.js";
 import { db } from "../../core/runtime.js";
-import {
-  errorDetails,
-  handleError,
-  openRouterError,
-  shouldTryModelFallback,
-} from "../../core/errors.js";
+import { errorDetails, handleError } from "../../core/errors.js";
 import {
   isLowBalance,
   reservationTokens,
-  resolveOpenRouterCharge,
+  chargeFromProviderUsd,
 } from "../../domain/credits.js";
 import {
   requireUser,
@@ -37,49 +39,13 @@ import {
   reserveAiTokens,
   finalizeAiTokens,
   releaseAiTokens,
-  claimFreeDailyUse,
   claimFreeTrialToken,
   releaseFreeTrialToken,
 } from "../../domain/reservations.js";
-import { getToolModelSettings } from "../../domain/tools.js";
-import { getOpenRouterImageModels } from "../../providers/openrouter-catalog.js";
 import {
   assertFeatureEnabled,
   assertUserCapability,
 } from "../../domain/settings.js";
-
-const SAFE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
-function detectSafeImageType(file) {
-  if (!Buffer.isBuffer(file) || !file.length) return "";
-  if (
-    file.length >= 8 &&
-    file
-      .subarray(0, 8)
-      .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
-  )
-    return "image/png";
-  if (
-    file.length >= 3 &&
-    file[0] === 0xff &&
-    file[1] === 0xd8 &&
-    file[2] === 0xff
-  )
-    return "image/jpeg";
-  if (
-    file.length >= 12 &&
-    file.toString("ascii", 0, 4) === "RIFF" &&
-    file.toString("ascii", 8, 12) === "WEBP"
-  )
-    return "image/webp";
-  return "";
-}
-function imageExtension(mediaType) {
-  return mediaType === "image/png"
-    ? "png"
-    : mediaType === "image/webp"
-      ? "webp"
-      : "jpg";
-}
 
 function isStorageCapacityError(error) {
   const text = String(
@@ -340,92 +306,6 @@ async function persistImage(req, res) {
   return json(res, 200, { saved: true, storagePath });
 }
 
-const FAST_IMAGE_MODEL_ID = "black-forest-labs/flux.2-klein-4b";
-const QUALITY_IMAGE_MODEL_ID = "black-forest-labs/flux.2-pro";
-
-function needsHighQualityImage(
-  prompt = "",
-  resolution = "",
-  hasReferenceImage = false,
-) {
-  if (hasReferenceImage || /^(2K|4K)$/i.test(String(resolution || "")))
-    return true;
-  const text = String(prompt || "").toLowerCase();
-  return (
-    text.length >= 460 ||
-    /(photoreal|ultra.?detail|accurate text|typography|poster|infographic|product shot|architecture|complex scene|دقة عالية|واقعي جدا|تفاصيل دقيقة|نص واضح|بوستر|انفوجرافيك)/i.test(
-      text,
-    )
-  );
-}
-
-async function getImageModels() {
-  const descriptor = (value, fallback) =>
-    Array.isArray(value)
-      ? { type: "enum", values: value.map(String) }
-      : value?.values
-        ? value
-        : { type: "enum", values: fallback };
-  return (await getOpenRouterImageModels()).map((model) => ({
-    ...model,
-    supported_parameters: {
-      ...(model.supported_parameters || {}),
-      aspect_ratio: descriptor(model.supported_parameters?.aspect_ratio, [
-        "1:1",
-        "4:3",
-        "3:4",
-        "16:9",
-        "9:16",
-      ]),
-      resolution: descriptor(model.supported_parameters?.resolution, [
-        "512",
-        "1K",
-        "2K",
-        "4K",
-      ]),
-    },
-    architecture: {
-      input_modalities: model.inputModalities ||
-        model.architecture?.input_modalities || ["text"],
-      output_modalities: model.outputModalities ||
-        model.architecture?.output_modalities || ["image"],
-    },
-  }));
-}
-
-async function getImageModel(
-  requestedId = "",
-  preferQuality = false,
-  taskId = "",
-) {
-  const models = await getImageModels();
-  const configured = (await getToolModelSettings()).image;
-  // The dedicated image tool must always use the model chosen by the admin.
-  // Manual image choices inside the all-models chat still honor the user's selection.
-  if (String(taskId || "").toLowerCase() === "image") {
-    return (
-      models.find((model) => model.id === configured) ||
-      models.find((model) => model.id === requestedId) ||
-      models.find(
-        (model) =>
-          model.id ===
-          (preferQuality ? QUALITY_IMAGE_MODEL_ID : FAST_IMAGE_MODEL_ID),
-      ) ||
-      models[0]
-    );
-  }
-  return (
-    models.find((model) => model.id === requestedId) ||
-    models.find((model) => model.id === configured) ||
-    models.find(
-      (model) =>
-        model.id ===
-        (preferQuality ? QUALITY_IMAGE_MODEL_ID : FAST_IMAGE_MODEL_ID),
-    ) ||
-    models[0]
-  );
-}
-
 export default async function handler(req, res) {
   if (!allowMethods(req, res, ["GET", "POST"])) return;
   const uiLocale = requestLocale(req);
@@ -585,119 +465,18 @@ ${JSON.stringify(safeToolConfig)}`;
       throw appError("TRIAL_ENDED");
     if (purchased && availableTokens < 1)
       throw appError("INSUFFICIENT_TOKENS", { availableTokens });
-    if (!String(process.env.OPENROUTER_API_KEY || "").trim())
-      throw appError("MISSING_CONFIGURATION", {
-        missing: ["OPENROUTER_API_KEY"],
-      });
+    if (!metaConfigured())
+      throw appError("MISSING_CONFIGURATION", { missing: ["META_API_KEY"] });
     const hasReferenceImage = referenceImages.length > 0;
-    let model = await getImageModel(
-      cleanText(modelId, 100),
-      needsHighQualityImage(imagePrompt, resolution, hasReferenceImage),
-      taskId,
-    );
-    let configuredFallbackId = "";
-    if (String(taskId || "").toLowerCase() === "image") {
-      try {
-        const t = await supabase
-          .from("ai_tools")
-          .select("prompt_config")
-          .eq("id", "image")
-          .maybeSingle();
-        configuredFallbackId = String(
-          t.data?.prompt_config?._admin?.fallback_model_id || "",
-        ).trim();
-      } catch {}
-    }
-    const freeImageModel =
-      String(model.id || "").endsWith(":free") ||
-      /grok-imagine-image-quality:free/i.test(model.id);
-    if (purchased && freeImageModel)
-      await claimFreeDailyUse(supabase, user.id, "image");
-    const supported = model.supported_parameters || {};
-    const enumValues = (descriptor) =>
-      Array.isArray(descriptor)
-        ? descriptor.map(String)
-        : descriptor?.type === "enum" && Array.isArray(descriptor.values)
-          ? descriptor.values.map(String)
-          : [];
-    const supports = (key) =>
-      Object.prototype.hasOwnProperty.call(supported, key);
-    const chooseEnum = (key, requested, preferred = []) => {
-      const values = enumValues(supported[key]);
-      if (!values.length) return null;
-      const exact = values.find(
-        (value) =>
-          value.toLowerCase() === String(requested || "").toLowerCase(),
-      );
-      if (exact) return exact;
-      for (const wanted of preferred) {
-        const match = values.find(
-          (value) => value.toLowerCase() === wanted.toLowerCase(),
-        );
-        if (match) return match;
-      }
-      return values[0];
-    };
-
-    const buildImageRequest = (selectedModel) => {
-      const selectedSupported = selectedModel.supported_parameters || {};
-      const selectedSupports = (key) =>
-        Object.prototype.hasOwnProperty.call(selectedSupported, key);
-      const selectedChooseEnum = (key, requested, preferred = []) => {
-        const values = enumValues(selectedSupported[key]);
-        if (!values.length) return null;
-        const exact = values.find(
-          (value) =>
-            value.toLowerCase() === String(requested || "").toLowerCase(),
-        );
-        if (exact) return exact;
-        for (const wanted of preferred) {
-          const match = values.find(
-            (value) => value.toLowerCase() === wanted.toLowerCase(),
-          );
-          if (match) return match;
-        }
-        return values[0];
-      };
-      const requestBody = {
-        model: selectedModel.id,
-        prompt: imagePrompt,
-        provider: { sort: "throughput", allow_fallbacks: true },
-      };
-      const chosenResolution = selectedChooseEnum("resolution", resolution, [
-        "1K",
-        "1024x1024",
-      ]);
-      const chosenAspectRatio = selectedChooseEnum(
-        "aspect_ratio",
+    const model = getImageModel();
+    const selectedAspectRatio =
+      model.supported_parameters.aspect_ratio.values.includes(
         requestedAspectRatio,
-        ["1:1"],
-      );
-      if (chosenResolution) requestBody.resolution = chosenResolution;
-      if (chosenAspectRatio) requestBody.aspect_ratio = chosenAspectRatio;
-      if (selectedSupports("n")) requestBody.n = 1;
-      if (hasReferenceImage) {
-        if (!selectedModel.architecture?.input_modalities?.includes("image"))
-          throw appError("REFERENCE_IMAGE_UNSUPPORTED");
-        requestBody.input_references = referenceImages.map((url) => ({
-          type: "image_url",
-          image_url: { url },
-        }));
-      }
-      return { requestBody, chosenResolution, chosenAspectRatio };
-    };
-
-    let {
-      requestBody: body,
-      chosenResolution: selectedResolution,
-      chosenAspectRatio: selectedAspectRatio,
-    } = buildImageRequest(model);
-    let estimatedCharge = await estimateImageCharge(
-      model,
-      selectedResolution,
-      selectedAspectRatio,
-      hasReferenceImage,
-    );
+      )
+        ? requestedAspectRatio
+        : "1:1";
+    const selectedResolution = null;
+    const estimatedCharge = estimateImageCharge(1);
     if (purchased && availableTokens < estimatedCharge.chargedTokens) {
       throw appError("INSUFFICIENT_TOKENS_FOR_REQUEST", {
         availableTokens,
@@ -737,80 +516,27 @@ ${JSON.stringify(safeToolConfig)}`;
       freeTrialActive = true;
     }
 
-    const imageHeaders = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${String(process.env.OPENROUTER_API_KEY).trim()}`,
-      "HTTP-Referer": String(process.env.APP_URL || "https://aiway.app"),
-      "X-Title": "AiWay",
-    };
-    let { response, data: payload } = await generateImage(body, imageHeaders);
-    if (!response.ok) {
-      const firstError = openRouterError(response.status, payload);
-      if (
-        configuredFallbackId &&
-        configuredFallbackId !== model.id &&
-        shouldTryModelFallback(firstError)
-      ) {
-        const fallback = (await getImageModels()).find(
-          (x) => x.id === configuredFallbackId,
-        );
-        if (fallback) {
-          const built = buildImageRequest(fallback);
-          const fallbackEstimate = await estimateImageCharge(
-            fallback,
-            built.chosenResolution,
-            built.chosenAspectRatio,
-            hasReferenceImage,
-          );
-          if (!purchased || fallbackEstimate.chargedTokens <= reservedTokens) {
-            model = fallback;
-            body = built.requestBody;
-            selectedResolution = built.chosenResolution;
-            selectedAspectRatio = built.chosenAspectRatio;
-            estimatedCharge = fallbackEstimate;
-            ({ response, data: payload } = await generateImage(
-              body,
-              imageHeaders,
-            ));
-          }
-        }
-      }
-      if (!response.ok) throw openRouterError(response.status, payload);
-    }
-    const imagePart = payload?.data?.[0];
-    if (!imagePart?.b64_json) throw appError("EMPTY_RESPONSE");
-    const declaredMediaType = String(
-      imagePart.media_type || "image/png",
-    ).toLowerCase();
-    const generatedFile = Buffer.from(
-      String(imagePart.b64_json || "").replace(/\s/g, ""),
-      "base64",
-    );
-    const detectedMediaType = detectSafeImageType(generatedFile);
-    if (
-      !generatedFile.length ||
-      generatedFile.length > 25 * 1024 * 1024 ||
-      !detectedMediaType ||
-      !SAFE_IMAGE_TYPES.has(detectedMediaType)
-    )
-      throw appError("EMPTY_RESPONSE");
-    const mediaType = detectedMediaType;
-    const thumbnailData = `data:${mediaType};base64,${imagePart.b64_json}`;
+    const generated = await museImage({
+      prompt: imagePrompt,
+      aspectRatio: selectedAspectRatio,
+      references: referenceImages,
+      user: user.id,
+    });
+    const generatedFile = generated.bytes;
+    const mediaType = generated.mediaType;
+    const thumbnailData = `data:${mediaType};base64,${generatedFile.toString("base64")}`;
     const sourceUrl = null;
     const imageUsage = {
-      prompt_tokens: Number(payload.usage?.prompt_tokens || 0),
-      completion_tokens: Number(payload.usage?.completion_tokens || 0),
-      total_tokens: Number(payload.usage?.total_tokens || 0),
-      cost: Number(payload.usage?.cost || 0),
+      prompt_tokens: generated.usage.input_tokens,
+      completion_tokens: generated.usage.output_tokens,
+      total_tokens:
+        generated.usage.input_tokens + generated.usage.output_tokens,
     };
-    const generationId = String(payload.id || payload?.data?.[0]?.id || "");
-    const charge = await resolveOpenRouterCharge({
-      usage: imageUsage,
-      generationId,
-      price: model.pricing,
-      webSearch: false,
-      fallbackUsd: estimatedCharge.providerUsd,
-    });
+    // Muse Image is billed per image, not per token.
+    const charge = chargeFromProviderUsd(
+      estimatedCharge.providerUsd,
+      imageUsage,
+    );
     const item = { width: null, height: null };
 
     let savedUser = null;
@@ -861,8 +587,7 @@ ${JSON.stringify(safeToolConfig)}`;
             ...charge,
             type: "image",
             taskId: taskId || "image",
-            provider: "openrouter",
-            providerRouting: "highest-throughput",
+            provider: "meta",
           },
         })
         .select("id")

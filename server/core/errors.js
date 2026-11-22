@@ -199,13 +199,6 @@ export function errorDetails(error, locale = "ar") {
         en: "The AI provider balance is temporarily exhausted. Your balance was not charged; contact AiWay support so the service can be topped up.",
       },
     ],
-    OPENROUTER_CREDITS_EXHAUSTED: [
-      503,
-      {
-        ar: "رصيد مزود الذكاء الاصطناعي انتهى مؤقتًا. لن يتم خصم رصيدك؛ تواصل مع إدارة AiWay لإعادة شحن الخدمة.",
-        en: "The AI provider balance is temporarily exhausted. Your balance was not charged; contact AiWay support so the service can be topped up.",
-      },
-    ],
     PROVIDER_AUTH_ERROR: [
       503,
       {
@@ -503,7 +496,7 @@ export function providerPayloadText(payload) {
   ).slice(0, 1000);
 }
 
-export function openRouterError(status, payload, options = {}) {
+export function metaError(status, payload, options = {}) {
   const message = providerPayloadText(payload);
   const lower = message.toLowerCase();
   const kind = options.kind === "image" ? "image" : "chat";
